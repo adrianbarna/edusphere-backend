@@ -1,0 +1,7 @@
+com/edusphere/controllers/ClassController.class
+com/edusphere/authorizationAnnotations/OwnerOrAdminPermission.class
+com/edusphere/entities/ClassEntity.class
+com/edusphere/entities/OrganizationEntity.class
+com/edusphere/enums/RolesEnum.class
+com/edusphere/entities/UserEntity.class
+com/edusphere/entities/RoleEntity.class

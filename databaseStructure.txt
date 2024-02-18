@@ -1,0 +1,237 @@
+create table public.organizations
+(
+    id          integer generated always as identity
+        constraint organizations_pk
+            primary key,
+    name        varchar not null,
+    description varchar not null
+);
+
+alter table public.organizations
+    owner to postgres;
+
+create table public.classes
+(
+    id              integer generated always as identity
+        constraint classes_pk
+            primary key,
+    name            varchar,
+    organization_id integer
+        constraint classes_organizations_id_fk
+            references public.organizations
+);
+
+alter table public.classes
+    owner to postgres;
+
+create table public.users
+(
+    id              integer generated always as identity
+        constraint users_pk
+            primary key,
+    username        varchar,
+    surname         varchar,
+    name            varchar,
+    organization_id integer not null
+        constraint users_organizations_id_fk
+            references public.organizations,
+    password        varchar not null,
+    is_activated    boolean,
+    class_id        integer
+        constraint users_classes_id_fk
+            references public.classes
+);
+
+alter table public.users
+    owner to postgres;
+
+create table public.newsletters
+(
+    author_id integer not null
+        constraint newsletters_users_id_fk
+            references public.users,
+    class_id  integer
+        constraint newsletters_classes_id_fk
+            references public.classes,
+    message   varchar not null,
+    id        integer generated always as identity
+        constraint newsletters_pk
+            primary key
+);
+
+alter table public.newsletters
+    owner to postgres;
+
+create table public.roles
+(
+    id              integer generated always as identity
+        constraint roles_pk
+            primary key,
+    name            varchar not null,
+    organization_id integer
+        constraint roles_organizations_id_fk
+            references public.organizations
+);
+
+alter table public.roles
+    owner to postgres;
+
+create table public.users_roles
+(
+    role_id integer
+        constraint users_roles_roles_id_fk
+            references public.roles,
+    user_id integer
+        constraint users_roles_users_id_fk
+            references public.users,
+    constraint users_roles_pk2
+        unique (role_id, user_id)
+);
+
+alter table public.users_roles
+    owner to postgres;
+
+create table public.children
+(
+    name      varchar not null,
+    surname   varchar not null,
+    parent_id integer not null
+        constraint children_users_id_fk
+            references public.users,
+    class_id  integer not null
+        constraint children_classes_id_fk
+            references public.classes,
+    id        integer generated always as identity
+        constraint children_pk
+            primary key
+);
+
+alter table public.children
+    owner to postgres;
+
+create table public.incidents
+(
+    child_id        integer not null
+        constraint incidents_children_id_fk
+            references public.children,
+    summary         varchar not null,
+    is_acknowledged boolean not null,
+    id              integer generated always as identity
+        constraint incidents_pk
+            primary key
+);
+
+alter table public.incidents
+    owner to postgres;
+
+create table public.payments
+(
+    id       integer generated always as identity
+        constraint payments_pk
+            primary key,
+    child_id integer not null
+        constraint payments_children_id_fk
+            references public.children,
+    amount   integer not null,
+    is_paid  boolean,
+    pay_type varchar not null,
+    date     date    not null,
+    due_date date
+);
+
+alter table public.payments
+    owner to postgres;
+
+create table public.messages
+(
+    teacher_id integer not null
+        constraint messages_users_id_fk
+            references public.users,
+    child_id   integer not null
+        constraint messages_children_id_fk
+            references public.children,
+    parent_id  integer not null
+        constraint messages_users_id_fk2
+            references public.users,
+    message    varchar not null,
+    is_read    boolean,
+    date       date    not null,
+    id         integer generated always as identity
+        constraint messages_pk
+            primary key
+);
+
+alter table public.messages
+    owner to postgres;
+
+create table public.events
+(
+    id          integer generated always as identity
+        constraint events_pk
+            primary key,
+    owner_id    integer not null
+        constraint owner_id
+            references public.users,
+    description varchar not null,
+    date        date
+);
+
+alter table public.events
+    owner to postgres;
+
+create table public.reports
+(
+    id          integer generated always as identity
+        constraint reports_pk
+            primary key,
+    child_id    integer not null
+        constraint reports_children_id_fk
+            references public.children,
+    teacher_id  integer not null
+        constraint reports_users_id_fk
+            references public.users,
+    description varchar not null,
+    date        date    not null
+);
+
+alter table public.reports
+    owner to postgres;
+
+create table public.goals
+(
+    id          serial
+        constraint goals_pk
+            primary key,
+    child_id    integer not null
+        constraint goals_children_id_fk
+            references public.children,
+    teacher_id  integer not null
+        constraint goals_users_id_fk
+            references public.users,
+    description varchar not null,
+    date        date,
+    due_date    date    not null
+);
+
+alter table public.goals
+    owner to postgres;
+
+create table public.feedbacks
+(
+    id         integer generated always as identity
+        constraint feedbacks_pk
+            primary key,
+    parent_id  integer not null
+        constraint feedbacks_users_id_fk
+            references public.users,
+    teacher_id integer not null
+        constraint feedbacks_users_id_fk2
+            references public.users,
+    message    varchar not null,
+    date       date    not null,
+    approved   boolean not null
+);
+
+alter table public.feedbacks
+    owner to postgres;
+
