@@ -37,7 +37,7 @@ public class ChildController {
     @Operation(summary = "Get a child by ID", description = "Retrieve a child by their ID")
     @GetMapping("/{childId}")
     public ChildVO getChildById(
-            @Parameter(description = "ID of the child to retrieve") @PathVariable Integer childId) {
+            @Parameter(description = "ID of the child to retrieve") @PathVariable("childId") Integer childId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return childService.getChildById(childId, organizationId);
     }
@@ -45,7 +45,7 @@ public class ChildController {
     @Operation(summary = "Get children by parent ID", description = "Retrieve a list of children by parent ID")
     @GetMapping("/parent/{parentId}")
     public List<ChildVO> getChildrenById(
-            @Parameter(description = "ID of the parent to retrieve children for") @PathVariable Integer parentId) {
+            @Parameter(description = "ID of the parent to retrieve children for") @PathVariable("parentId") Integer parentId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return childService.getChildrenByParentId(parentId, organizationId);
     }
@@ -61,7 +61,7 @@ public class ChildController {
     @Operation(summary = "Update a child by ID", description = "Update a child by their ID")
     @PutMapping("/{id}")
     public ChildVO updateChild(
-            @Parameter(description = "ID of the child to update") @PathVariable Integer id,
+            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer id,
             @Parameter(description = "Child data to update") @RequestBody ChildVO childVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return childService.updateChild(id, childVO, organizationId);
@@ -70,7 +70,7 @@ public class ChildController {
     @Operation(summary = "Delete a child by ID", description = "Delete a child by their ID")
     @DeleteMapping("/{id}")
     public void deleteChild(
-            @Parameter(description = "ID of the child to delete") @PathVariable Integer id) {
+            @Parameter(description = "ID of the child to delete") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         childService.deleteChild(id, organizationId);
     }

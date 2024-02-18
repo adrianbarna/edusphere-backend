@@ -38,7 +38,7 @@ public class IncidentController {
     @Operation(summary = "Get an incident by ID", description = "Retrieve an incident by its ID")
     @GetMapping("/{id}")
     public ResponseEntity<IncidentVO> getIncidentById(
-            @Parameter(description = "ID of the incident to retrieve") @PathVariable Integer id) {
+            @Parameter(description = "ID of the incident to retrieve") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         IncidentVO incident = incidentService.getIncidentById(id, organizationId);
         return new ResponseEntity<>(incident, HttpStatus.OK);
@@ -56,7 +56,7 @@ public class IncidentController {
     @Operation(summary = "Update an incident by ID", description = "Update an incident by its ID")
     @PutMapping("/{id}")
     public ResponseEntity<IncidentVO> updateIncident(
-            @Parameter(description = "ID of the incident to update") @PathVariable Integer id,
+            @Parameter(description = "ID of the incident to update") @PathVariable("id") Integer id,
             @Parameter(description = "Incident data to update") @RequestBody IncidentVO incidentVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         IncidentVO updatedIncident = incidentService.updateIncident(id, incidentVO, organizationId);
@@ -66,7 +66,7 @@ public class IncidentController {
     @Operation(summary = "Delete an incident by ID", description = "Delete an incident by its ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteIncident(
-            @Parameter(description = "ID of the incident to delete") @PathVariable Integer id) {
+            @Parameter(description = "ID of the incident to delete") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         incidentService.deleteIncident(id, organizationId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

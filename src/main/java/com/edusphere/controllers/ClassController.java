@@ -38,7 +38,7 @@ public class ClassController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get class by ID", description = "Get a class by its ID")
-    public ResponseEntity<ClassVO> getClassById(@PathVariable Integer id) {
+    public ResponseEntity<ClassVO> getClassById(@PathVariable("id") Integer id) {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         ClassVO classVO = classService.getClassById(id, currentUserOrganizationId);
         return new ResponseEntity<>(classVO, HttpStatus.OK);
@@ -55,7 +55,7 @@ public class ClassController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update class by ID", description = "Update a class by its ID")
-    public ResponseEntity<ClassVO> updateClass(@PathVariable Integer id, @RequestBody ClassVO classVO) {
+    public ResponseEntity<ClassVO> updateClass(@PathVariable("id") Integer id, @RequestBody ClassVO classVO) {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         ClassVO updatedClass = classService.updateClass(id, classVO, currentUserOrganizationId);
         return new ResponseEntity<>(updatedClass, HttpStatus.OK);
@@ -63,7 +63,7 @@ public class ClassController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete class by ID", description = "Delete a class by its ID")
-    public ResponseEntity<Void> deleteClass(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteClass(@PathVariable("id") Integer id) {
         try {
             Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
             classService.deleteClass(id, currentUserOrganizationId);

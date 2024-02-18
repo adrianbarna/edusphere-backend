@@ -47,7 +47,7 @@ public class RoleController {
             }),
             @ApiResponse(responseCode = "404", description = "Role not found", content = @Content)
     })
-    public RoleVO getRoleById(@PathVariable @Parameter(description = "Role ID") Integer roleId) {
+    public RoleVO getRoleById(@PathVariable("roleId") @Parameter(description = "Role ID") Integer roleId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return roleService.getRoleById(roleId, organizationId);
     }
@@ -61,14 +61,14 @@ public class RoleController {
 
     @PutMapping("/{roleId}")
     @Operation(summary = "Update a role by ID")
-    public RoleVO updateRole(@PathVariable @Parameter(description = "Role ID") Integer roleId, @RequestBody CreateUpdateRoleVO roleVO) {
+    public RoleVO updateRole(@PathVariable("roleId") @Parameter(description = "Role ID") Integer roleId, @RequestBody CreateUpdateRoleVO roleVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return roleService.updateRole(roleId, roleVO, organizationId);
     }
 
     @DeleteMapping("/{roleId}")
     @Operation(summary = "Delete a role by ID")
-    public boolean deleteRole(@PathVariable @Parameter(description = "Role ID") Integer roleId) {
+    public boolean deleteRole(@PathVariable("roleId") @Parameter(description = "Role ID") Integer roleId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return roleService.deleteRole(roleId, organizationId);
     }

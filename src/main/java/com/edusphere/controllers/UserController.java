@@ -60,7 +60,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Get a user by their ID")
-    public ResponseEntity<UserResponseVO> getUserById(@PathVariable Integer id) {
+    public ResponseEntity<UserResponseVO> getUserById(@PathVariable("id") Integer id) {
         Integer currentOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         UserResponseVO user = userService.getUserById(id, currentOrganizationId);
 
@@ -69,7 +69,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update user by ID", description = "Update a user by their ID")
-    public ResponseEntity<UserResponseVO> updateUserByAdmin(@PathVariable Integer id, @RequestBody UserRequestVO userRequestVO) {
+    public ResponseEntity<UserResponseVO> updateUserByAdmin(@PathVariable("id") Integer id, @RequestBody UserRequestVO userRequestVO) {
         Integer currentOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         UserResponseVO updatedUser = userService.updateUser(id, userRequestVO, currentOrganizationId);
         if (updatedUser != null) {
@@ -81,7 +81,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user by ID", description = "Delete a user by their ID")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Integer id) {
         Integer currentOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         boolean deleted = userService.deleteUser(id, currentOrganizationId);
         if (deleted) {

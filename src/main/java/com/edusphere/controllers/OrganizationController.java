@@ -42,19 +42,19 @@ public class OrganizationController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get an organization by ID")
-    public OrganizationVO getOrganizationById(@PathVariable @Parameter(description = "Organization ID") Integer id) {
+    public OrganizationVO getOrganizationById(@PathVariable("id") @Parameter(description = "Organization ID") Integer id) {
         return organizationService.getOrganizationById(id);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an organization by ID")
-    public void updateOrganization(@PathVariable @Parameter(description = "Organization ID") Integer id, @RequestBody OrganizationVO organizationVO) {
+    public void updateOrganization(@PathVariable("id") @Parameter(description = "Organization ID") Integer id, @RequestBody OrganizationVO organizationVO) {
         organizationService.updateOrganization(id, organizationVO);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an organization by ID")
-    public void deleteOrganization(@PathVariable @Parameter(description = "Organization ID") Integer id) {
+    public void deleteOrganization(@PathVariable("id") @Parameter(description = "Organization ID") Integer id) {
         organizationService.deleteOrganization(id);
     }
 }
