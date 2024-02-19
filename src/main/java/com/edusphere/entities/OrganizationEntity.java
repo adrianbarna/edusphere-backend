@@ -20,11 +20,12 @@ public class OrganizationEntity {
     private Integer id;
 
     @NotNull
-    @Column(name = "name", nullable = false, length = Integer.MAX_VALUE, unique = true)
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(255) unique")
     private String name;
 
+
     @NotNull
-    @Column(name = "description", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "description", nullable = false, columnDefinition = "VARCHAR(255)")
     private String description;
 
     @OneToMany(mappedBy = "organization")

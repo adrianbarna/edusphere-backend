@@ -19,13 +19,13 @@ public class UserEntity {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "username", length = Integer.MAX_VALUE, unique = true)
+    @Column(name = "username", columnDefinition = "VARCHAR(255) unique", unique = true)
     private String username;
 
-    @Column(name = "surname", length = Integer.MAX_VALUE)
+    @Column(name = "surname", columnDefinition = "VARCHAR(255)")
     private String surname;
 
-    @Column(name = "name", length = Integer.MAX_VALUE)
+    @Column(name = "name", columnDefinition = "VARCHAR(255)")
     private String name;
 
     @NotNull
@@ -34,7 +34,7 @@ public class UserEntity {
     private OrganizationEntity organization;
 
     @NotNull
-    @Column(name = "password", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "password", nullable = false, columnDefinition = "VARCHAR(255)")
     private String password;
 
     @Column(name = "is_activated")

@@ -70,11 +70,11 @@ public class TestUtils {
 
     public UserEntity saveAParentInOrganization(OrganizationEntity organizationEntity) {
         RoleEntity parentRole = saveRole(PARENT.getName(), organizationEntity);
-        return saveUser(generateRandomString(), "asddas", organizationEntity, parentRole);
+        return saveUser(generateRandomString(), generateRandomString(), organizationEntity, parentRole);
     }
 
     public UserEntity saveAParentInAnotherOrganization() {
-        OrganizationEntity aRandomOrganization = saveOrganization(generateRandomString(), "aRandomOrg");
+        OrganizationEntity aRandomOrganization = saveOrganization(generateRandomString(), generateRandomString());
         RoleEntity parentRole = saveRole(PARENT.getName(), aRandomOrganization);
         return  saveUser(generateRandomString(), "asddas", aRandomOrganization, parentRole);
     }

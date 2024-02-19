@@ -317,11 +317,11 @@ public class UserControllerIntegrationTest {
         String token = testUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
 
         UserRequestVO userRequestVO = new UserRequestVO();
-        userRequestVO.setUsername(userWhoWantsToDoTheUpdate.getUsername() + "Updated");
-        userRequestVO.setName("aName");
-        userRequestVO.setSurname("aSurname");
+        userRequestVO.setUsername(generateRandomString());
+        userRequestVO.setName(generateRandomString());
+        userRequestVO.setSurname(generateRandomString());
         userRequestVO.setIsActivated(true);
-        userRequestVO.setPassword("test");
+        userRequestVO.setPassword(generateRandomString());
 
         mockMvc.perform(MockMvcRequestBuilders.put("/user/" + aParentFromAnotherOrganization.getId())
                         .header("Authorization", "Bearer " + token)
