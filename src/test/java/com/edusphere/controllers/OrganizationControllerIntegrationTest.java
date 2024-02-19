@@ -198,7 +198,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     private void getOrganizationByIdWhenCalledByUser(UserEntity allowedUser) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), "Test Description");
+        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), generateRandomString());
         String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", organizationEntity.getId())
                 .header("Authorization", "Bearer " + token))

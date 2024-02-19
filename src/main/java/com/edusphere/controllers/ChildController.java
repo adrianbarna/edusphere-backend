@@ -44,7 +44,7 @@ public class ChildController {
 
     @Operation(summary = "Get children by parent ID", description = "Retrieve a list of children by parent ID")
     @GetMapping("/parent/{parentId}")
-    public List<ChildVO> getChildrenById(
+    public List<ChildVO> getChildrenByParentId(
             @Parameter(description = "ID of the parent to retrieve children for") @PathVariable("parentId") Integer parentId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return childService.getChildrenByParentId(parentId, organizationId);
