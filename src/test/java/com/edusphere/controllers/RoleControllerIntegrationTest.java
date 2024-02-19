@@ -6,6 +6,7 @@ import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
 import com.edusphere.repositories.RoleRepository;
 import com.edusphere.repositories.UserRepository;
+import com.edusphere.utils.JwtUtil;
 import com.edusphere.vos.AssignRoleRequestWrapperVO;
 import com.edusphere.vos.CreateUpdateRoleVO;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -33,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
 public class RoleControllerIntegrationTest {
 
     @Autowired
@@ -46,6 +50,9 @@ public class RoleControllerIntegrationTest {
 
     @Autowired
     private TestUtils testUtils;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
