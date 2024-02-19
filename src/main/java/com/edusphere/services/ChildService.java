@@ -32,7 +32,7 @@ public class ChildService {
     }
 
     public ChildVO addChild(ChildVO childVO, Integer organizationId) {
-        ChildEntity childEntity = childMapper.toEntity(childVO);
+        ChildEntity childEntity = childMapper.toEntity(childVO, organizationId);
         if (!organizationId.equals(childEntity.getParent().getOrganization().getId())) {
             throw new ParentNotFoundException(childVO.getParentId());
         }
@@ -58,6 +58,7 @@ public class ChildService {
         return childMapper.toVO(updatedChild);
     }
 
+    //TODO this method is not used
     public boolean deleteChild(Integer childId, Integer organizationId) {
         if (childRepository.existsByIdAndParentOrganizationId(childId, organizationId)) {
             childRepository.deleteByIdAndParentOrganizationId(childId, organizationId);
@@ -68,7 +69,7 @@ public class ChildService {
 
     public ChildVO getChildById(Integer childId, Integer organizationId) {
         ChildEntity childEntity = childRepository.findByIdAndParentOrganizationId(childId, organizationId)
-                .orElseThrow(() -> new RuntimeException("Child not found with ID: " + childId));
+                .orElseThrow(() -> new RuntimeException("Copilul cu id-ul " + childId+ " nu a fost gasit"));
         return childMapper.toVO(childEntity);
     }
 

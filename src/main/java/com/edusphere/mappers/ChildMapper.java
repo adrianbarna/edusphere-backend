@@ -1,6 +1,8 @@
 package com.edusphere.mappers;
 
 import com.edusphere.entities.ChildEntity;
+import com.edusphere.exceptions.ClassNotFoundException;
+import com.edusphere.exceptions.UserNotFoundException;
 import com.edusphere.repositories.ClassRepository;
 import com.edusphere.repositories.UserRepository;
 import com.edusphere.vos.ChildVO;
@@ -16,7 +18,7 @@ public class ChildMapper {
         this.classRepository = classRepository;
     }
 
-    public ChildEntity toEntity(ChildVO childVO) {
+    public ChildEntity toEntity(ChildVO childVO, Integer organizationId) {
         if (childVO == null) {
             return null;
         }
@@ -25,8 +27,8 @@ public class ChildMapper {
                 .id(childVO.getId())
                 .name(childVO.getName())
                 .surname(childVO.getSurname())
-                .parent(userRepository.findById(childVO.getParentId()).orElse((null)))
-                .classEntity(classRepository.findById(childVO.getClassId()).orElse(null))
+                .parent(userRepository.findByIdAndOrganizationId(childVO.getParentId(), organizationId).orElseThrow(() ->new UserNotFoundException(childVO.getParentId())))
+                .classEntity(classRepository.findByIdAndOrganizationId(childVO.getClassId(), organizationId).orElseThrow(() -> new ClassNotFoundException(childVO.getClassId())))
                 .build();
     }
 

@@ -1,10 +1,11 @@
 package com.edusphere.controllers;
 
 import com.edusphere.controllers.utils.TestUtils;
-import com.edusphere.entities.ChildEntity;
-import com.edusphere.entities.OrganizationEntity;
-import com.edusphere.entities.RoleEntity;
-import com.edusphere.entities.UserEntity;
+import com.edusphere.entities.*;
+import com.edusphere.repositories.ChildRepository;
+import com.edusphere.vos.ChildVO;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,18 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.edusphere.controllers.utils.TestUtils.asJsonString;
 import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -40,6 +44,9 @@ public class ChildControllerIntegrationTest {
 
     @Autowired
     private TestUtils testUtils;
+
+    @Autowired
+    private ChildRepository childRepository;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
@@ -151,7 +158,8 @@ public class ChildControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Child not found with ID: "+childEntity.getId()));
+                .andExpect(jsonPath("$.error")
+                        .value("Copilul cu id-ul "+childEntity.getId()+" nu a fost gasit"));
     }
 
     @Test
@@ -174,6 +182,188 @@ public class ChildControllerIntegrationTest {
                 .andExpect(jsonPath("$.message")
                         .value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
                 .andExpect(jsonPath("$.error").value("Access Denied"));
-        ;
+    }
+
+    @Test
+    public void getChildByParentId() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                getChildByParentId(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getChildByParentId(UserEntity userEntity) throws Exception {
+        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value(childEntity.getId()))
+                .andExpect(jsonPath("$[0].name").value(childEntity.getName()))
+                .andExpect(jsonPath("$[0].surname").value(childEntity.getSurname()));
+    }
+
+    @Test
+    public void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(UserEntity userEntity) throws Exception {
+        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        ChildEntity childEntity = testUtils.saveAChildInOrganization(anotherOrganizationEntity);
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Parintele cu id-ul: " + childEntity.getParent().getId()
+                        + " nu are niciun copil in organizatie"));
+    }
+
+    @Test
+    public void getChildByParentId_shouldFailForNotAllowedUser() {
+        try {
+            for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
+                getChildByParentId_shouldFailForNotAllowedUser(notAllowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getChildByParentId_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
+        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(jsonPath("$.message")
+                        .value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
+                .andExpect(jsonPath("$.error").value("Access Denied"));
+    }
+
+    @Test
+    public void addChild() {
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                addChild(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void addChild(UserEntity userEntity) throws Exception {
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(parent.getId())
+                .classId(aClass.getId())
+                .build();
+
+        // Perform the mockMvc request
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/child")
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.name").value(childVO.getName()))
+                .andExpect(jsonPath("$.surname").value(childVO.getSurname()))
+                .andReturn();
+
+        // Extract the "id" from the response JSON
+        String responseContent = result.getResponse().getContentAsString();
+        JsonNode jsonNode = new ObjectMapper().readTree(responseContent);
+        String id = jsonNode.get("id").asText();
+
+        assertTrue(childRepository.existsById(Integer.valueOf(id)));
+    }
+
+    @Test
+    public void addChildInAClassFromAnotherOrganization_shouldFail() {
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                addChildInAClassFromAnotherOrganization_shouldFail(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void addChildInAClassFromAnotherOrganization_shouldFail(UserEntity userEntity) throws Exception {
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
+        OrganizationEntity anotherOrganization = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        ClassEntity aClass = testUtils.saveAClassInOrganization(anotherOrganization);
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(parent.getId())
+                .classId(aClass.getId())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.post("/child")
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul "+aClass.getId()));
+
+    }
+
+    @Test
+    public void addChildWithParentFromAnotherOrganization_shouldFail() {
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                addChildWithParentFromAnotherOrganization_shouldFail(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void addChildWithParentFromAnotherOrganization_shouldFail(UserEntity userEntity) throws Exception {
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
+        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(parentFromAnotherOrganization.getId())
+                .classId(aClass.getId())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.post("/child")
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Id-ul "+childVO.getParentId()+" al user-ului este invalid"));
+
     }
 }
