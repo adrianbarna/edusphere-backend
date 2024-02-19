@@ -26,8 +26,7 @@ import java.util.List;
 import static com.edusphere.controllers.utils.TestUtils.asJsonString;
 import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
-import static com.edusphere.enums.RolesEnum.PARENT;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
