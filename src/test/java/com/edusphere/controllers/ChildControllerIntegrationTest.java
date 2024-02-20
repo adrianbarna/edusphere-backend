@@ -1,5 +1,6 @@
 package com.edusphere.controllers;
 
+import com.edusphere.controllers.exceptions.AssertionFailedError;
 import com.edusphere.controllers.utils.TestUtils;
 import com.edusphere.entities.*;
 import com.edusphere.repositories.ChildRepository;
@@ -27,14 +28,12 @@ import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @AutoConfigureMockMvc
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//TODO add all tests for child controller
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
 public class ChildControllerIntegrationTest {
 
@@ -365,5 +364,244 @@ public class ChildControllerIntegrationTest {
                         .value("Ups! A aparut o eroare!"))
                 .andExpect(jsonPath("$.error").value("Id-ul "+childVO.getParentId()+" al user-ului este invalid"));
 
+    }
+
+    @Test
+    public void updateChild() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+
+                updateChild(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void updateChild(UserEntity userEntity) throws Exception {
+        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+
+        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(aParent.getId())
+                .classId(aClass.getId())
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.name").value(childVO.getName()))
+                .andExpect(jsonPath("$.surname").value(childVO.getSurname()))
+                .andExpect(jsonPath("$.parentId").value(childVO.getParentId()))
+                .andExpect(jsonPath("$.classId").value(childVO.getClassId()));
+
+        ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
+                userEntity.getOrganization().getId()).orElseThrow(AssertionFailedError::new);
+        assertEquals(childVO.getName(), updatedUser.getName());
+        assertEquals(childVO.getSurname(), updatedUser.getSurname());
+        assertEquals(childVO.getParentId(), updatedUser.getParent().getId());
+        assertEquals(childVO.getClassId(), updatedUser.getClassEntity().getId());
+    }
+
+    @Test
+    public void updateChild_shouldFailWhenParentInAnotherOrganization() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+
+                updateChild_shouldFailWhenParentInAnotherOrganization(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void updateChild_shouldFailWhenParentInAnotherOrganization(UserEntity userEntity) throws Exception {
+        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+
+        UserEntity parentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
+        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(parentFromAnotherOrganization.getId())
+                .classId(aClass.getId())
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Id-ul parintelui este invalid: "+childVO.getParentId()));
+
+
+        ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
+                userEntity.getOrganization().getId()).orElseThrow(AssertionFailedError::new);
+        assertNotEquals(childVO.getName(), updatedUser.getName());
+        assertNotEquals(childVO.getSurname(), updatedUser.getSurname());
+        assertNotEquals(childVO.getParentId(), updatedUser.getParent().getId());
+        assertNotEquals(childVO.getClassId(), updatedUser.getClassEntity().getId());
+    }
+
+    @Test
+    public void updateChild_shouldFailWhenClassInAnotherOrganization() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+
+                updateChild_shouldFailWhenClassInAnotherOrganization(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void updateChild_shouldFailWhenClassInAnotherOrganization(UserEntity userEntity) throws Exception {
+        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+
+        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = testUtils.saveAClassInAnotherOrganization();
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(aParent.getId())
+                .classId(aClass.getId())
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul "+childVO.getClassId()));
+
+
+        ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
+                userEntity.getOrganization().getId()).orElseThrow(AssertionFailedError::new);
+        assertNotEquals(childVO.getName(), updatedUser.getName());
+        assertNotEquals(childVO.getSurname(), updatedUser.getSurname());
+        assertNotEquals(childVO.getParentId(), updatedUser.getParent().getId());
+        assertNotEquals(childVO.getClassId(), updatedUser.getClassEntity().getId());
+    }
+
+    @Test
+    public void updateChild_shouldFailForNotAllowedUsers() {
+        try {
+            for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
+
+                updateChild_shouldFailForNotAllowedUsers(notAllowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void updateChild_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
+        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+
+        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = testUtils.saveAClassInAnotherOrganization();
+        ChildVO childVO = ChildVO.builder()
+                .name(generateRandomString())
+                .surname(generateRandomString())
+                .parentId(aParent.getId())
+                .classId(aClass.getId())
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(childVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(jsonPath("$.message")
+                        .value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
+                .andExpect(jsonPath("$.error").value("Access Denied"));
+
+
+        ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
+                userEntity.getOrganization().getId()).orElseThrow(AssertionFailedError::new);
+        assertNotEquals(childVO.getName(), updatedUser.getName());
+        assertNotEquals(childVO.getSurname(), updatedUser.getSurname());
+        assertNotEquals(childVO.getParentId(), updatedUser.getParent().getId());
+        assertNotEquals(childVO.getClassId(), updatedUser.getClassEntity().getId());
+    }
+
+    @Test
+    public void deleteChild() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                deleteChild(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void deleteChild(UserEntity userEntity) throws Exception {
+        ChildEntity aChild = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        assertFalse(childRepository.existsById(aChild.getId()));
+    }
+
+    @Test
+    public void deleteChild_shouldFailWhenChildInAnotherOrganization() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                deleteChild_shouldFailWhenChildInAnotherOrganization(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void deleteChild_shouldFailWhenChildInAnotherOrganization(UserEntity userEntity) throws Exception {
+        ChildEntity aChild = testUtils.saveAChildInAnotherOrganization();
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        assertTrue(childRepository.existsById(aChild.getId()));
+    }
+
+    @Test
+    public void deleteChild_shouldFailForNotAllowedUsers() {
+        try {
+            for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
+                deleteChild_shouldFailForNotAllowedUsers(notAllowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void deleteChild_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
+        ChildEntity aChild = testUtils.saveAChildInAnotherOrganization();
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+
+        assertTrue(childRepository.existsById(aChild.getId()));
     }
 }

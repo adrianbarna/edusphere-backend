@@ -12,6 +12,7 @@ import com.edusphere.repositories.ClassRepository;
 import com.edusphere.repositories.UserRepository;
 import com.edusphere.vos.ChildVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class ChildService {
         UserEntity parentEntity = userRepository.findByIdAndOrganizationId(childVO.getParentId(), organizationId)
                 .orElseThrow(() -> new ParentNotFoundException(childVO.getParentId()));
         ClassEntity classEntity = classRepository.findByIdAndOrganizationId(childVO.getClassId(), organizationId)
-                .orElseThrow(() -> new ClassNotFoundException(childVO.getId()));
+                .orElseThrow(() -> new ClassNotFoundException(childVO.getClassId()));
 
         existingChild.setName(childVO.getName());
         existingChild.setSurname(childVO.getSurname());
@@ -58,13 +59,13 @@ public class ChildService {
         return childMapper.toVO(updatedChild);
     }
 
-    //TODO this method is not used
-    public boolean deleteChild(Integer childId, Integer organizationId) {
-        if (childRepository.existsByIdAndParentOrganizationId(childId, organizationId)) {
-            childRepository.deleteByIdAndParentOrganizationId(childId, organizationId);
-            return true;
+    @Transactional
+    public void deleteChild(Integer childId, Integer organizationId) {
+
+        if (!childRepository.existsByIdAndParentOrganizationId(childId, organizationId)) {
+            throw new ChildNotFoundException(childId);
         }
-        return false;
+            childRepository.deleteByIdAndParentOrganizationId(childId, organizationId);
     }
 
     public ChildVO getChildById(Integer childId, Integer organizationId) {

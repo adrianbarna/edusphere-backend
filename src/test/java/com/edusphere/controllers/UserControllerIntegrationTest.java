@@ -1,5 +1,6 @@
 package com.edusphere.controllers;
 
+import com.edusphere.controllers.exceptions.AssertionFailedError;
 import com.edusphere.controllers.utils.TestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -251,7 +251,7 @@ public class UserControllerIntegrationTest {
         String token = testUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
 
         UserRequestVO userRequestVO = new UserRequestVO();
-        userRequestVO.setUsername(userWhoWantsToDoTheUpdate.getUsername() + "Updated");
+        userRequestVO.setUsername(generateRandomString());
         userRequestVO.setName("aName");
         userRequestVO.setSurname("aSurname");
         userRequestVO.setIsActivated(true);
@@ -263,9 +263,9 @@ public class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.username").value(userWhoWantsToDoTheUpdate.getUsername() + "Updated"));
+                .andExpect(jsonPath("$.username").value(userRequestVO.getUsername()));
 
-        UserEntity updatedUser = userRepository.findByUsername(userRequestVO.getUsername()).get();
+        UserEntity updatedUser = userRepository.findByUsername(userRequestVO.getUsername()).orElseThrow(AssertionFailedError::new);
         assertEquals(userRequestVO.getUsername(), updatedUser.getUsername());
         assertEquals(userRequestVO.getIsActivated(), updatedUser.getActivated());
         assertEquals(userRequestVO.getName(), updatedUser.getName());
@@ -336,22 +336,22 @@ public class UserControllerIntegrationTest {
                         + " este invalid pentru organizatia " + userWhoWantsToDoTheUpdate.getOrganization().getId()));
 
 
-        UserEntity notUpdatedUser = userRepository.findByUsername(aParentFromAnotherOrganization.getUsername()).get();
+        UserEntity notUpdatedUser = userRepository.findByUsername(aParentFromAnotherOrganization.getUsername()).orElseThrow(AssertionFailedError::new);
         assertNotEquals(userRequestVO.getUsername(), notUpdatedUser.getUsername());
     }
 
     @Test
-    public void deleteUserTest() {
+    public void deleteUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                deleteUserWhenCalledByUser(allowedUser);
+                deleteUser(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void deleteUserWhenCalledByUser(UserEntity allowedUser) throws Exception {
+    private void deleteUser(UserEntity allowedUser) throws Exception {
         UserEntity aParent = testUtils.saveAParentInOrganization(allowedUser.getOrganization());
         String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/user/" + aParent.getId())

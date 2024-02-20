@@ -87,13 +87,22 @@ public class TestUtils {
         return classRepository.save(classEntity);
     }
 
+    public ClassEntity saveAClassInAnotherOrganization(){
+        OrganizationEntity organizationEntity = saveOrganization(generateRandomString(), generateRandomString());
+        ClassEntity classEntity = new ClassEntity();
+        classEntity.setName(generateRandomString());
+        classEntity.setOrganization(organizationEntity);
+
+        return classRepository.save(classEntity);
+    }
+
     public ChildEntity saveAChildInOrganization(OrganizationEntity organizationEntity){
         UserEntity aParent = saveAParentInOrganization(organizationEntity);
+        ClassEntity classEntity = saveAClassInOrganization(organizationEntity);
 
         ChildEntity childEntity = new ChildEntity();
         childEntity.setName(generateRandomString());
         childEntity.setSurname(generateRandomString());
-        ClassEntity classEntity = saveAClassInOrganization(organizationEntity);
         childEntity.setClassEntity(classEntity);
         childEntity.setParent(aParent);
 

@@ -21,9 +21,9 @@ public class AuthenticatedUserUtil {
 
         if (authentication != null) {
             UserEntity user = userRepository.findByUsername((String) authentication.getPrincipal())
-                    .orElseThrow(() -> new IllegalStateException("User not authenticated or user details not available"));
+                    .orElseThrow(() -> new IllegalStateException("Userul nu este autenticat"));
             return user.getOrganization() != null ? user.getOrganization().getId() : null;
         }
-        throw new IllegalStateException("User-ul logat nu este asignat niciunei organizatii!");
+        throw new IllegalStateException("User-ul logat nu este asignat acestei organizatii!");
     }
 }
