@@ -75,6 +75,7 @@ public class OrganizationControllerIntegrationTest {
         }
     }
 
+
     private void addOrganizationWhenCalledByUser(UserEntity userEntity) throws Exception {
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         OrganizationVO organizationVO = OrganizationVO.builder()
