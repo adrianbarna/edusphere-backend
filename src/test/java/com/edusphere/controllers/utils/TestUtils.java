@@ -59,8 +59,11 @@ public class TestUtils {
         return roleRepository.save(roleEntity);
     }
 
+    public OrganizationEntity saveOrganization() {
+        return saveOrganization(generateRandomString(), generateRandomString());
+    }
 
-    public OrganizationEntity saveOrganization(String name, String description) {
+    private OrganizationEntity saveOrganization(String name, String description) {
         OrganizationEntity organizationEntity = new OrganizationEntity();
         organizationEntity.setName(name);
         organizationEntity.setDescription(description);
@@ -74,7 +77,7 @@ public class TestUtils {
     }
 
     public UserEntity saveAParentInAnotherOrganization() {
-        OrganizationEntity aRandomOrganization = saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity aRandomOrganization = saveOrganization();
         RoleEntity parentRole = saveRole(PARENT.getName(), aRandomOrganization);
         return  saveUser(generateRandomString(), "asddas", aRandomOrganization, parentRole);
     }
@@ -88,7 +91,7 @@ public class TestUtils {
     }
 
     public ClassEntity saveAClassInAnotherOrganization(){
-        OrganizationEntity organizationEntity = saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity organizationEntity = saveOrganization();
         ClassEntity classEntity = new ClassEntity();
         classEntity.setName(generateRandomString());
         classEntity.setOrganization(organizationEntity);
@@ -110,7 +113,7 @@ public class TestUtils {
     }
 
     public ChildEntity saveAChildInAnotherOrganization(){
-        OrganizationEntity anotherOrganization = saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity anotherOrganization = saveOrganization();
         UserEntity aParent = saveAParentInOrganization(anotherOrganization);
 
         ChildEntity childEntity = new ChildEntity();

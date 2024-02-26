@@ -52,7 +52,7 @@ public class ChildControllerIntegrationTest {
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), "aDescription");
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
         RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
@@ -149,7 +149,7 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildById_shouldFailWhenTakenFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization();
         ChildEntity childEntity = testUtils.saveAChildInOrganization(anotherOrganizationEntity);
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
@@ -218,7 +218,7 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization();
         ChildEntity childEntity = testUtils.saveAChildInOrganization(anotherOrganizationEntity);
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
@@ -310,7 +310,7 @@ public class ChildControllerIntegrationTest {
     private void addChildInAClassFromAnotherOrganization_shouldFail(UserEntity userEntity) throws Exception {
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         UserEntity parent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
         ClassEntity aClass = testUtils.saveAClassInOrganization(anotherOrganization);
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())

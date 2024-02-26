@@ -51,7 +51,7 @@ public class UserControllerIntegrationTest {
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), "aDescription");
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
         RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);

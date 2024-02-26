@@ -1,16 +1,10 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.exceptions.AssertionFailedError;
 import com.edusphere.controllers.utils.TestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
-import com.edusphere.repositories.UserRepository;
 import com.edusphere.vos.LoginRequestVO;
-import com.edusphere.vos.UserRequestVO;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +17,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.edusphere.controllers.utils.TestUtils.asJsonString;
 import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
-import static com.edusphere.enums.RolesEnum.*;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static com.edusphere.enums.RolesEnum.OWNER;
 
 @AutoConfigureMockMvc
 @SpringBootTest(properties = "spring.config.name=application-test")
@@ -45,16 +32,13 @@ public class AuthControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private TestUtils testUtils;
 
 
 
     @Test
     public void authenticateUser() throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), generateRandomString());
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity roleEntity = testUtils.saveRole(OWNER.toString(), organizationEntity);
         UserEntity userEntity = testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, roleEntity);
 
