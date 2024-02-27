@@ -42,7 +42,7 @@ public class ChildController {
         return childService.getChildById(childId, organizationId);
     }
 
-    @Operation(summary = "Get children by parent ID", description = "Retrieve a list of children by parent ID")
+    @Operation(summary = "Get child by parent ID", description = "Retrieve a list of children by parent ID")
     @GetMapping("/parent/{parentId}")
     public List<ChildVO> getChildrenByParentId(
             @Parameter(description = "ID of the parent to retrieve children for") @PathVariable("parentId") Integer parentId) {
