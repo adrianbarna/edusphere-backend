@@ -20,6 +20,7 @@ import java.util.List;
 @Tag(name = "User Controller", description = "APIs for managing users")
 @SecurityRequirement(name = "Bearer Authentication")
 @OwnerOrAdminPermission
+//TODO filter by role
 public class UserController {
 
     private final UserService userService;
