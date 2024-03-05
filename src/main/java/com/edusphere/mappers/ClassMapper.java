@@ -23,7 +23,7 @@ public class ClassMapper {
         this.organizationRepository = organizationRepository;
     }
 
-    public ClassEntity toEntity(ClassVO classVO) {
+    public ClassEntity toEntity(ClassVO classVO, Integer organizationId) {
         if (classVO == null) {
             return null;
         }
@@ -31,7 +31,7 @@ public class ClassMapper {
         Set<UserEntity> teachers = new HashSet<>();
         if(classVO.getTeacherIds() != null) {
             teachers = classVO.getTeacherIds().stream()
-                    .map(teacherId -> teacherUtil.getTeacherOrThrowException(classVO, teacherId))
+                    .map(teacherId -> teacherUtil.getTeacherOrThrowException(organizationId, teacherId))
                     .collect(Collectors.toSet());
         }
 
@@ -39,8 +39,8 @@ public class ClassMapper {
         return ClassEntity.builder()
                 .id(classVO.getId())
                 .name(classVO.getName())
-                .organization(organizationRepository.findById(classVO.getOrganizationId())
-                        .orElseThrow(() -> new OrganizationNotFoundException(classVO.getOrganizationId() )))
+                .organization(organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new OrganizationNotFoundException(organizationId)))
                 .teachers(teachers)
                 .build();
     }
@@ -52,7 +52,6 @@ public class ClassMapper {
         return ClassVO.builder()
                 .id(classEntity.getId())
                 .name(classEntity.getName())
-                .organizationId(classEntity.getOrganization().getId())
                 .teacherIds(classEntity.getTeachers().stream()
                         .map(UserEntity::getId)
                         .collect(Collectors.toList()))

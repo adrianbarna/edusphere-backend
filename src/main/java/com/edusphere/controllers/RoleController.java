@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,9 +55,10 @@ public class RoleController {
 
     @PostMapping
     @Operation(summary = "Create a role")
-    public RoleVO createRole(@RequestBody CreateUpdateRoleVO roleVO) {
+    public ResponseEntity<RoleVO> createRole(@RequestBody CreateUpdateRoleVO roleVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
-        return roleService.createRole(roleVO, organizationId);
+        RoleVO roleResponseVO = roleService.createRole(roleVO, organizationId);
+        return new ResponseEntity<>(roleResponseVO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{roleId}")

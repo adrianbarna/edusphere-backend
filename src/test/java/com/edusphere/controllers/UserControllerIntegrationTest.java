@@ -173,8 +173,8 @@ public class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul " + aParentFromAnotherOrganzation.getId() + " al user-ului este invalid"));
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Id-ul " + aParentFromAnotherOrganzation.getId() + " al user-ului este invalid"));
     }
 
     @Test
@@ -201,7 +201,7 @@ public class UserControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(userRequestVO))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.username").value(userEntity.getUsername() + "Newuser"));
     }
@@ -331,8 +331,8 @@ public class UserControllerIntegrationTest {
                         .content(asJsonString(userRequestVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Userul cu id-ul " + aParentFromAnotherOrganization.getId()
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Userul cu id-ul " + aParentFromAnotherOrganization.getId()
                         + " este invalid pentru organizatia " + userWhoWantsToDoTheUpdate.getOrganization().getId()));
 
 
@@ -400,8 +400,8 @@ public class UserControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul " + aParentFromAnotherOrganization.getId() + " al user-ului este invalid"));
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Id-ul " + aParentFromAnotherOrganization.getId() + " al user-ului este invalid"));
 
         assertTrue(userRepository.existsById(aParentFromAnotherOrganization.getId()));
     }

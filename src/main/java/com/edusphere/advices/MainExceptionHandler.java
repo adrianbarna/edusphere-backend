@@ -13,7 +13,7 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class MainExceptionHandler {
     @ExceptionHandler({Exception.class})
     public final ResponseEntity<ApiErrorVO> handleAllException(Exception e) {
-        ApiErrorVO apiErrorVO = new ApiErrorVO(BAD_REQUEST, "Ups! A aparut o eroare!", e.getMessage());
+        ApiErrorVO apiErrorVO = new ApiErrorVO(BAD_REQUEST, e.getMessage(), "Ups! A aparut o eroare!");
 
         return new ResponseEntity<>(apiErrorVO, apiErrorVO.getStatus());
     }

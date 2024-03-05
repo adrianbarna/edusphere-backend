@@ -20,8 +20,8 @@ public class TeacherUtil {
         this.userRepository = userRepository;
     }
 
-    public UserEntity getTeacherOrThrowException(ClassVO classVO, Integer teacherId) {
-        Optional<UserEntity> teacherOptional = userRepository.findByIdAndOrganizationId(teacherId, classVO.getOrganizationId());
+    public UserEntity getTeacherOrThrowException(Integer organizationId, Integer teacherId) {
+        Optional<UserEntity> teacherOptional = userRepository.findByIdAndOrganizationId(teacherId, organizationId);
         if(!userHasTeacherRole(teacherOptional)) {
             throw new UserNotFoundException("User-ul asignat nu este un profesor!");
         }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.security.SecureRandom;
 
 import static com.edusphere.enums.RolesEnum.PARENT;
+import static com.edusphere.enums.RolesEnum.TEACHER;
 
 @Component
 public class TestUtils {
@@ -74,6 +75,11 @@ public class TestUtils {
     public UserEntity saveAParentInOrganization(OrganizationEntity organizationEntity) {
         RoleEntity parentRole = saveRole(PARENT.getName(), organizationEntity);
         return saveUser(generateRandomString(), "123456", organizationEntity, parentRole);
+    }
+
+    public UserEntity saveATeacherInOrganization(OrganizationEntity organizationEntity) {
+        RoleEntity teacherRole = saveRole(TEACHER.getName(), organizationEntity);
+        return saveUser(generateRandomString(), "123456", organizationEntity, teacherRole);
     }
 
     public UserEntity saveAParentInAnotherOrganization() {

@@ -88,7 +88,7 @@ public class OrganizationControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(organizationVO))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.name").value(organizationVO.getName()))

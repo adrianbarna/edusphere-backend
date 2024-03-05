@@ -155,9 +155,9 @@ public class ChildControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
-                        .value("Ups! A aparut o eroare!"))
                 .andExpect(jsonPath("$.error")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message")
                         .value("Copilul cu id-ul " + childEntity.getId() + " nu a fost gasit"));
     }
 
@@ -224,9 +224,9 @@ public class ChildControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Parintele cu id-ul: " + childEntity.getParent().getId()
+                .andExpect(jsonPath("$.message").value("Parintele cu id-ul: " + childEntity.getParent().getId()
                         + " nu are niciun copil in organizatie"));
     }
 
@@ -292,9 +292,9 @@ public class ChildControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Parintele cu id-ul: " + userEntity.getId() + " nu are niciun copil in organizatie"));
+                .andExpect(jsonPath("$.message").value("Parintele cu id-ul: " + userEntity.getId() + " nu are niciun copil in organizatie"));
     }
 
     @Test
@@ -325,7 +325,7 @@ public class ChildControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.name").value(childVO.getName()))
@@ -370,9 +370,9 @@ public class ChildControllerIntegrationTest {
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul " + aClass.getId()));
+                .andExpect(jsonPath("$.message").value("Nu exista clasa cu id-ul " + aClass.getId()));
 
     }
 
@@ -405,9 +405,9 @@ public class ChildControllerIntegrationTest {
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul " + childVO.getParentId() + " al user-ului este invalid"));
+                .andExpect(jsonPath("$.message").value("Id-ul " + childVO.getParentId() + " al user-ului este invalid"));
 
     }
 
@@ -485,9 +485,9 @@ public class ChildControllerIntegrationTest {
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul parintelui este invalid: " + childVO.getParentId()));
+                .andExpect(jsonPath("$.message").value("Id-ul parintelui este invalid: " + childVO.getParentId()));
 
 
         ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
@@ -528,9 +528,9 @@ public class ChildControllerIntegrationTest {
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message")
+                .andExpect(jsonPath("$.error")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul " + childVO.getClassId()));
+                .andExpect(jsonPath("$.message").value("Nu exista clasa cu id-ul " + childVO.getClassId()));
 
 
         ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),

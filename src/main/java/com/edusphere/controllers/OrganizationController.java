@@ -5,12 +5,9 @@ import com.edusphere.services.OrganizationService;
 import com.edusphere.vos.OrganizationVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +27,9 @@ public class OrganizationController {
 
     @PostMapping
     @Operation(summary = "Add an organization")
-    public ResponseEntity<OrganizationVO> addOrganization(@RequestBody OrganizationVO organizationVO) {
-        return ResponseEntity.ok(organizationService.addOrganization(organizationVO));
+    public ResponseEntity<OrganizationVO> createOrganization(@RequestBody OrganizationVO organizationVO) {
+        OrganizationVO organizationResponseVO = organizationService.addOrganization(organizationVO);
+        return new ResponseEntity<>(organizationResponseVO, HttpStatus.CREATED);
     }
 
     @GetMapping

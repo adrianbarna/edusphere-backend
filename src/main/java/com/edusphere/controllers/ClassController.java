@@ -1,5 +1,6 @@
 package com.edusphere.controllers;
 
+import com.edusphere.authorizationAnnotations.OwnerOrAdminPermission;
 import com.edusphere.authorizationAnnotations.TeacherOrAdminOrOwnerPermission;
 import com.edusphere.services.ClassService;
 import com.edusphere.utils.AuthenticatedUserUtil;
@@ -17,7 +18,7 @@ import java.util.List;
 @RequestMapping("/class")
 @Tag(name = "Class Controller", description = "APIs for managing classes")
 @SecurityRequirement(name = "Bearer Authentication")
-@TeacherOrAdminOrOwnerPermission
+
 public class ClassController {
 
     private final ClassService classService;
@@ -30,6 +31,7 @@ public class ClassController {
 
     @GetMapping
     @Operation(summary = "Get all classes", description = "Get a list of all classes")
+    @TeacherOrAdminOrOwnerPermission
     public ResponseEntity<List<ClassVO>> getAllClasses() {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         List<ClassVO> classes = classService.getAllClasses(currentUserOrganizationId);
@@ -38,6 +40,7 @@ public class ClassController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get class by ID", description = "Get a class by its ID")
+    @TeacherOrAdminOrOwnerPermission
     public ResponseEntity<ClassVO> getClassById(@PathVariable("id") Integer id) {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         ClassVO classVO = classService.getClassById(id, currentUserOrganizationId);
@@ -46,6 +49,7 @@ public class ClassController {
 
     @PostMapping
     @Operation(summary = "Create a new class", description = "Create a new class")
+    @OwnerOrAdminPermission
     public ResponseEntity<ClassVO> createClass(@RequestBody ClassVO classVO) {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         ClassVO createdClass = classService.createClass(classVO, currentUserOrganizationId);
@@ -55,6 +59,7 @@ public class ClassController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update class by ID", description = "Update a class by its ID")
+    @OwnerOrAdminPermission
     public ResponseEntity<ClassVO> updateClass(@PathVariable("id") Integer id, @RequestBody ClassVO classVO) {
         Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         ClassVO updatedClass = classService.updateClass(id, classVO, currentUserOrganizationId);
@@ -63,11 +68,12 @@ public class ClassController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete class by ID", description = "Delete a class by its ID")
+    @OwnerOrAdminPermission
     public ResponseEntity<Void> deleteClass(@PathVariable("id") Integer id) {
         try {
             Integer currentUserOrganizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
             classService.deleteClass(id, currentUserOrganizationId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

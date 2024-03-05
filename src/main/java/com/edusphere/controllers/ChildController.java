@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -64,10 +66,11 @@ public class ChildController {
     @Operation(summary = "Create a child", description = "Create a new child")
     @PostMapping
     @TeacherOrAdminOrOwnerPermission
-    public ChildVO createChild(
+    public ResponseEntity<ChildVO> createChild(
             @Parameter(description = "Child data to create") @RequestBody ChildVO childVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
-        return childService.addChild(childVO, organizationId);
+        ChildVO childResponseVO = childService.addChild(childVO, organizationId);
+        return new ResponseEntity<>(childResponseVO, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update a child by ID", description = "Update a child by their ID")
