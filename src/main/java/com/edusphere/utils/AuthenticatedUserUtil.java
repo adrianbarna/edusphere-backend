@@ -26,4 +26,15 @@ public class AuthenticatedUserUtil {
         }
         throw new IllegalStateException("User-ul logat nu este asignat acestei organizatii!");
     }
+
+    public Integer getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            UserEntity user = userRepository.findByUsername((String) authentication.getPrincipal())
+                    .orElseThrow(() -> new IllegalStateException("Userul nu este autenticat"));
+            return user!= null ? user.getId() : null;
+        }
+        throw new IllegalStateException("User-ul  logat este invalid!");
+    }
 }

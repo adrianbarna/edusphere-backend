@@ -1,6 +1,7 @@
 package com.edusphere.controllers;
 
 import com.edusphere.authorizationAnnotations.TeacherOrAdminOrOwnerPermission;
+import com.edusphere.authorizationAnnotations.TeacherOrAdminOrParentOrOwnerPermission;
 import com.edusphere.services.ChildService;
 import com.edusphere.utils.AuthenticatedUserUtil;
 import com.edusphere.vos.ChildVO;
@@ -16,7 +17,6 @@ import java.util.List;
 @RequestMapping("/child")
 @Tag(name = "Child Controller", description = "APIs for managing children")
 @SecurityRequirement(name = "Bearer Authentication")
-@TeacherOrAdminOrOwnerPermission
 public class ChildController {
 
     private final ChildService childService;
@@ -29,13 +29,23 @@ public class ChildController {
 
     @Operation(summary = "Get all children", description = "Retrieve a list of all children")
     @GetMapping
+    @TeacherOrAdminOrOwnerPermission
     public List<ChildVO> getAllChildren() {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         return childService.getAllChildren(organizationId);
     }
 
+    @Operation(summary = "Get all children", description = "Retrieve a list of all children")
+    @TeacherOrAdminOrParentOrOwnerPermission
+    @GetMapping("/forParent")
+    public List<ChildVO> getAllChildrenForParent() {
+        Integer parentId = authenticatedUserUtil.getCurrentUserId();
+        return getChildrenByParentId(parentId);
+    }
+
     @Operation(summary = "Get a child by ID", description = "Retrieve a child by their ID")
     @GetMapping("/{childId}")
+    @TeacherOrAdminOrOwnerPermission
     public ChildVO getChildById(
             @Parameter(description = "ID of the child to retrieve") @PathVariable("childId") Integer childId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
@@ -44,6 +54,7 @@ public class ChildController {
 
     @Operation(summary = "Get child by parent ID", description = "Retrieve a list of children by parent ID")
     @GetMapping("/parent/{parentId}")
+    @TeacherOrAdminOrOwnerPermission
     public List<ChildVO> getChildrenByParentId(
             @Parameter(description = "ID of the parent to retrieve children for") @PathVariable("parentId") Integer parentId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
@@ -52,6 +63,7 @@ public class ChildController {
 
     @Operation(summary = "Create a child", description = "Create a new child")
     @PostMapping
+    @TeacherOrAdminOrOwnerPermission
     public ChildVO createChild(
             @Parameter(description = "Child data to create") @RequestBody ChildVO childVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
@@ -60,6 +72,7 @@ public class ChildController {
 
     @Operation(summary = "Update a child by ID", description = "Update a child by their ID")
     @PutMapping("/{id}")
+    @TeacherOrAdminOrOwnerPermission
     public ChildVO updateChild(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer id,
             @Parameter(description = "Child data to update") @RequestBody ChildVO childVO) {
@@ -69,6 +82,7 @@ public class ChildController {
 
     @Operation(summary = "Delete a child by ID", description = "Delete a child by their ID")
     @DeleteMapping("/{id}")
+    @TeacherOrAdminOrOwnerPermission
     public void deleteChild(
             @Parameter(description = "ID of the child to delete") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();

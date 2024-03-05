@@ -73,7 +73,7 @@ public class TestUtils {
 
     public UserEntity saveAParentInOrganization(OrganizationEntity organizationEntity) {
         RoleEntity parentRole = saveRole(PARENT.getName(), organizationEntity);
-        return saveUser(generateRandomString(), generateRandomString(), organizationEntity, parentRole);
+        return saveUser(generateRandomString(), "123456", organizationEntity, parentRole);
     }
 
     public UserEntity saveAParentInAnotherOrganization() {

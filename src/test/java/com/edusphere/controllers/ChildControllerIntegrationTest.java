@@ -158,7 +158,7 @@ public class ChildControllerIntegrationTest {
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
                 .andExpect(jsonPath("$.error")
-                        .value("Copilul cu id-ul "+childEntity.getId()+" nu a fost gasit"));
+                        .value("Copilul cu id-ul " + childEntity.getId() + " nu a fost gasit"));
     }
 
     @Test
@@ -253,6 +253,51 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
+    public void getChildForParent() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                getChildForParent(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getChildForParent(UserEntity userEntity) throws Exception {
+        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(childEntity.getParent().getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value(childEntity.getId()))
+                .andExpect(jsonPath("$[0].name").value(childEntity.getName()))
+                .andExpect(jsonPath("$[0].surname").value(childEntity.getSurname()));
+    }
+
+    @Test
+    public void getChildForParen_shouldFailWhenRetrievingWrongChild() {
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                getChildForParen_shouldFailWhenRetrievingWrongChild(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getChildForParen_shouldFailWhenRetrievingWrongChild(UserEntity userEntity) throws Exception {
+        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.error").value("Parintele cu id-ul: " + userEntity.getId() + " nu are niciun copil in organizatie"));
+    }
+
+    @Test
     public void addChild() {
         try {
             // Test adding an organization when called by different users.
@@ -327,7 +372,7 @@ public class ChildControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul "+aClass.getId()));
+                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul " + aClass.getId()));
 
     }
 
@@ -362,7 +407,7 @@ public class ChildControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul "+childVO.getParentId()+" al user-ului este invalid"));
+                .andExpect(jsonPath("$.error").value("Id-ul " + childVO.getParentId() + " al user-ului este invalid"));
 
     }
 
@@ -442,7 +487,7 @@ public class ChildControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul parintelui este invalid: "+childVO.getParentId()));
+                .andExpect(jsonPath("$.error").value("Id-ul parintelui este invalid: " + childVO.getParentId()));
 
 
         ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
@@ -485,7 +530,7 @@ public class ChildControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul "+childVO.getClassId()));
+                .andExpect(jsonPath("$.error").value("Nu exista clasa cu id-ul " + childVO.getClassId()));
 
 
         ChildEntity updatedUser = childRepository.findByIdAndParentOrganizationId(childToBeUpdated.getId(),
