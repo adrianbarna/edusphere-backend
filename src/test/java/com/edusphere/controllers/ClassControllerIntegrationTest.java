@@ -38,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-//TODO add the other tests
 public class ClassControllerIntegrationTest {
     public static final String PASSWORD = "123456";
     public static final String CLASS_ENDPOINT = "/class";

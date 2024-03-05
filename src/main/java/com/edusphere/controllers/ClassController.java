@@ -78,6 +78,4 @@ public class ClassController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    //TODO create controller to assign a teacher to a class
 }
