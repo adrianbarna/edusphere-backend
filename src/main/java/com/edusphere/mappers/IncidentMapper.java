@@ -26,8 +26,8 @@ public class IncidentMapper {
     public IncidentEntity toEntity(IncidentVO incidentVO, Integer organizationId) {
         return IncidentEntity.builder()
                 .id(incidentVO.getId())
-                .child(childRepository.findByIdAndParentOrganizationId(incidentVO.getId(),
-                        organizationId).orElseThrow(() -> new ChildNotFoundException(incidentVO.getId())))
+                .child(childRepository.findByIdAndParentOrganizationId(incidentVO.getChildId(),
+                        organizationId).orElseThrow(() -> new ChildNotFoundException(incidentVO.getChildId())))
                 .isAcknowledged(incidentVO.getIsAcknowledged())
                 .summary(incidentVO.getSummary())
                 .build();

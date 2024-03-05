@@ -5,6 +5,7 @@ import com.edusphere.entities.*;
 import com.edusphere.repositories.*;
 import com.edusphere.vos.LoginRequestVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,9 @@ public class TestUtils {
     @Autowired
     private ClassRepository classRepository;
 
+    @Autowired
+    private IncidentRepository incidentRepository;
+
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -58,6 +62,16 @@ public class TestUtils {
         roleEntity.setName(role);
         roleEntity.setOrganization(organizationEntity);
         return roleRepository.save(roleEntity);
+    }
+
+    public IncidentEntity saveIncident(OrganizationEntity organizationEntity){
+        IncidentEntity incidentEntity = new IncidentEntity();
+        ChildEntity childEntity = saveAChildInOrganization(organizationEntity);
+        incidentEntity.setChild(childEntity);
+        incidentEntity.setSummary(generateRandomString());
+        incidentEntity.setAcknowledged(false);
+
+        return incidentRepository.save(incidentEntity);
     }
 
     public OrganizationEntity saveOrganization() {

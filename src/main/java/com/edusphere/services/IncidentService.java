@@ -2,7 +2,7 @@ package com.edusphere.services;
 
 import com.edusphere.entities.IncidentEntity;
 import com.edusphere.exceptions.ChildNotFoundException;
-import com.edusphere.exceptions.IncidentNotException;
+import com.edusphere.exceptions.IncidentNotFoundException;
 import com.edusphere.mappers.IncidentMapper;
 import com.edusphere.repositories.ChildRepository;
 import com.edusphere.repositories.IncidentRepository;
@@ -38,7 +38,7 @@ public class IncidentService {
     public IncidentVO getIncidentById(Integer id, Integer organizationId) {
         return incidentRepository.findByIdAndChildParentOrganizationId(id, organizationId)
                 .map(incidentMapper::toVO)
-                .orElseThrow(() -> new IncidentNotException(id));
+                .orElseThrow(() -> new IncidentNotFoundException(id));
     }
 
     @Transactional
@@ -58,7 +58,7 @@ public class IncidentService {
                             .orElseThrow(() -> new ChildNotFoundException(incidentVO.getChildId())));
                     return incidentEntity;
                 })
-                .orElseThrow(() -> new IncidentNotException(id));
+                .orElseThrow(() -> new IncidentNotFoundException(id));
         incidentRepository.save(updatedEntity);
         return incidentMapper.toVO(updatedEntity);
     }
@@ -69,6 +69,8 @@ public class IncidentService {
         if (incidentRepository.existsByIdAndChildParentOrganizationId(id, organizationId)) {
 
             incidentRepository.deleteByIdAndChildParentOrganizationId(id, organizationId);
+        }else{
+            throw new IncidentNotFoundException(id);
         }
     }
 
