@@ -156,12 +156,11 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getRoleByIdWhenCalledByUserShouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        RoleEntity role = roleRepository.findByName("ADMIN").orElse(null);
-        assertNotNull(role);
+        RoleEntity aRole = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
