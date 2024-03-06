@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/login").permitAll()
-                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers( "/api-docs/**",
                                 "/swagger-resources/**",
                                 "/swagger-ui/**",
@@ -74,6 +74,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
