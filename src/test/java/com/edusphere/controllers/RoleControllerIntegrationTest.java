@@ -105,11 +105,8 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getAllRolesWhenCalledByUserShouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherEntity = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), anotherEntity);
         String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        List<RoleEntity> organizationRoles = roleRepository.findByOrganizationId(userEntity.getOrganization().getId());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/role")
                         .header("Authorization", "Bearer " + token)
@@ -131,17 +128,16 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getRoleByIdWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity role = roleRepository.findByName("ADMIN").orElse(null);
-        assertNotNull(role);
+        RoleEntity aRole = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.name").value("ADMIN"));
+                .andExpect(jsonPath("$.name").value(aRole.getName()));
     }
 
     @Test
