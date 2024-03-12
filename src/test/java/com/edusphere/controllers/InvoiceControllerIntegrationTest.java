@@ -176,4 +176,40 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceEntityFromPreviousMonth.getId()))))
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceForAnotherParent.getId()))));
     }
+
+    @Test
+    public void getParentInvoices_shouldFailForNotAllowedRoles() {
+
+        final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity parentRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
+        try {
+            for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
+                getParentInvoices_shouldFailForNotAllowedRoles(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void getParentInvoices_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+        InvoiceEntity invoiceEntity = testUtils.saveInvoice(userEntity.getOrganization());
+
+        LocalDate currentDate = LocalDate.now();
+
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        String formattedDate = currentDate.format(formatter);
+
+        mockMvc.perform(MockMvcRequestBuilders.get(INVOICE_ENDPOINT + "/parent/" + invoiceEntity.getChild().getParent().getId() +
+                                "?month=" + formattedDate)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
+                .andExpect(jsonPath("$.error").value("Access Denied"));
+    }
 }
