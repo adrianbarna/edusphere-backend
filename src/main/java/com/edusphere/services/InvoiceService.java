@@ -151,36 +151,13 @@ public class InvoiceService {
         ChildEntity childEntity = getChildEntity(childId, organizationId);
 
         List<SkippedDaysVO> unprocessedSkipDays = getSkippedDaysPeriods(childId);
-        List<InvoiceVO> invoices = getInvoicesForChildForMonth(childId, month, organizationId);
+        List<InvoiceVO> invoicesForChildForMonth = getInvoicesForChildForMonth(childId, month, organizationId);
 
 
-        invoices.forEach(invoiceVO -> {
-            List<SkippedDaysVO> unprocessedBeforeProcessingInvoice = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
-
-            unprocessedBeforeProcessingInvoice.forEach(skippedDaysVO -> {
-                int amountForCurrentSkipDaysPeriod = getAmountForSkippedDaysEntity(childEntity, skippedDaysVO);
-
-                if (skipDaysAmountCanBeSubstractedFromInvoiceAmount(invoiceVO, amountForCurrentSkipDaysPeriod)) {
-                    substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(invoiceVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
-                }
-            });
-        });
-
-        return invoices;
+        return substractSkippedDaysAmountsFromInvoicesAmountForChildInvoiceList(invoicesForChildForMonth, unprocessedSkipDays, childEntity);
     }
 
-    private ChildEntity getChildEntity(Integer childId, Integer organizationId) {
-        return childRepository.findByIdAndParentOrganizationId(childId, organizationId)
-                .orElseThrow(() -> new ChildNotFoundException(childId));
-    }
-
-    private List<SkippedDaysVO> getSkippedDaysPeriods(Integer childId) {
-        return skippedDaysRepository.findUnproccessedByChildId(childId)
-                .stream()
-                .map(skippedDaysMapper::toVO)
-                .toList();
-    }
-
+    //TODO add skipDaysPeriods logic
     public List<InvoiceVO> getParentInvoicesByMonth(Integer parentId, YearMonth month, Integer organizationId) {
         return getInvoicesForParentId(parentId, month, organizationId);
     }
@@ -197,26 +174,19 @@ public class InvoiceService {
         return invoiceMapper.toVO(invoiceEntity);
     }
 
-    private List<InvoiceVO> getInvoicesForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
-                        month.getYear(), organizationId)
-                .stream()
-                .map(invoiceMapper::toVO)
-                .collect(Collectors.toList());
-    }
-
     private List<InvoiceVO> getInvoicesForParentId(Integer parentId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
+        List<InvoiceVO> invoicesVOs = invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
                         month.getYear(), organizationId)
                 .stream()
                 .map(invoiceMapper::toVO)
                 .collect(Collectors.toList());
+        return invoicesVOs;
     }
 
-    private int getAmountForSkippedDaysEntity(ChildEntity child, SkippedDaysVO skippedDaysVO) {
+    private int getAmountForSkippedDaysEntity(Integer childMealPrice, SkippedDaysVO skippedDaysVO) {
         int numberOfWeekdays = getWeekdayCountForSkippedDays(skippedDaysVO);
 
-        return child.getMealPrice() * numberOfWeekdays;
+        return childMealPrice * numberOfWeekdays;
     }
 
     private int getWeekdayCountForSkippedDays(SkippedDaysVO skippedDaysEntity) {
@@ -257,5 +227,45 @@ public class InvoiceService {
         return unprocessedSkipDays.stream()
                 .filter(skippedDaysEntity -> !skippedDaysEntity.getProccessed())
                 .toList();
+    }
+
+    private List<InvoiceVO> getInvoicesForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
+        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
+                        month.getYear(), organizationId)
+                .stream()
+                .map(invoiceMapper::toVO)
+                .collect(Collectors.toList());
+    }
+
+    private ChildEntity getChildEntity(Integer childId, Integer organizationId) {
+        return childRepository.findByIdAndParentOrganizationId(childId, organizationId)
+                .orElseThrow(() -> new ChildNotFoundException(childId));
+    }
+
+    private List<SkippedDaysVO> getSkippedDaysPeriods(Integer childId) {
+        return skippedDaysRepository.findUnproccessedByChildId(childId)
+                .stream()
+                .map(skippedDaysMapper::toVO)
+                .toList();
+    }
+
+    private List<InvoiceVO> substractSkippedDaysAmountsFromInvoicesAmountForChildInvoiceList(List<InvoiceVO> invoicesForChildForMonth, List<SkippedDaysVO> unprocessedSkipDays, ChildEntity childEntity) {
+        invoicesForChildForMonth.forEach(invoiceVO -> {
+            substractSkippedDaysAmountsFromInvoicesAmount(invoiceVO, unprocessedSkipDays, childEntity.getMealPrice());
+        });
+
+        return invoicesForChildForMonth;
+    }
+
+    private void substractSkippedDaysAmountsFromInvoicesAmount(InvoiceVO invoiceVO, List<SkippedDaysVO> unprocessedSkipDays, Integer childMealPrice) {
+        List<SkippedDaysVO> unprocessedBeforeProcessingInvoice = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
+
+        unprocessedBeforeProcessingInvoice.forEach(skippedDaysVO -> {
+            int amountForCurrentSkipDaysPeriod = getAmountForSkippedDaysEntity(childMealPrice, skippedDaysVO);
+
+            if (skipDaysAmountCanBeSubstractedFromInvoiceAmount(invoiceVO, amountForCurrentSkipDaysPeriod)) {
+                substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(invoiceVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
+            }
+        });
     }
 }
