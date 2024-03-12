@@ -175,12 +175,11 @@ public class InvoiceService {
     }
 
     private List<InvoiceVO> getInvoicesForParentId(Integer parentId, YearMonth month, Integer organizationId) {
-        List<InvoiceVO> invoicesVOs = invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
+        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
                         month.getYear(), organizationId)
                 .stream()
                 .map(invoiceMapper::toVO)
                 .collect(Collectors.toList());
-        return invoicesVOs;
     }
 
     private int getAmountForSkippedDaysEntity(Integer childMealPrice, SkippedDaysVO skippedDaysVO) {
@@ -250,9 +249,7 @@ public class InvoiceService {
     }
 
     private List<InvoiceVO> substractSkippedDaysAmountsFromInvoicesAmountForChildInvoiceList(List<InvoiceVO> invoicesForChildForMonth, List<SkippedDaysVO> unprocessedSkipDays, ChildEntity childEntity) {
-        invoicesForChildForMonth.forEach(invoiceVO -> {
-            substractSkippedDaysAmountsFromInvoicesAmount(invoiceVO, unprocessedSkipDays, childEntity.getMealPrice());
-        });
+        invoicesForChildForMonth.forEach(invoiceVO -> substractSkippedDaysAmountsFromInvoicesAmount(invoiceVO, unprocessedSkipDays, childEntity.getMealPrice()));
 
         return invoicesForChildForMonth;
     }
