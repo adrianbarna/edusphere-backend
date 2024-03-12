@@ -20,12 +20,20 @@ public class ChildEntity {
     private Integer id;
 
     @NotNull
-    @Column(name = "name", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @NotNull
-    @Column(name = "surname", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "surname", nullable = false)
     private String surname;
+
+    @NotNull
+    @Column(name = "base_tax", nullable = false)
+    private Integer baseTax;
+
+    @NotNull
+    @Column(name = "meal_price", nullable = false)
+    private Integer mealPrice;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -141,5 +149,21 @@ public class ChildEntity {
 
     public void setReports(Set<ReportEntity> reports) {
         this.reports = reports;
+    }
+
+    public Integer getBaseTax() {
+        return baseTax;
+    }
+
+    public void setBaseTax(Integer baseTax) {
+        this.baseTax = baseTax;
+    }
+
+    public Integer getMealPrice() {
+        return mealPrice;
+    }
+
+    public void setMealPrice(Integer mealPrice) {
+        this.mealPrice = mealPrice;
     }
 }
