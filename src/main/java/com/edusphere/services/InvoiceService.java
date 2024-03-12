@@ -1,7 +1,9 @@
 package com.edusphere.services;
 
 
-
+import com.edusphere.mappers.InvoiceMapper;
+import com.edusphere.repositories.InvoiceRepository;
+import com.edusphere.vos.InvoiceVO;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -15,10 +17,21 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 // just a demo on how to generate an invoice
 public class InvoiceService {
+
+    private final InvoiceRepository invoiceRepository;
+    private final InvoiceMapper invoiceMapper;
+
+    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper) {
+        this.invoiceRepository = invoiceRepository;
+        this.invoiceMapper = invoiceMapper;
+    }
 
     private ByteArrayInputStream generateInvoice() {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -109,5 +122,21 @@ public class InvoiceService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<InvoiceVO> getChildInvoicesByMonth(Integer childId, YearMonth month, Integer organizationId) {
+        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
+                month.getYear(), organizationId)
+                .stream()
+                .map(invoiceMapper::toVO)
+                .collect(Collectors.toList());
+    }
+
+    public List<InvoiceVO> getParentInvoicesByMonth(Integer parentId, YearMonth month, Integer organizationId) {
+        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId,month.getMonthValue(),
+                        month.getYear(), organizationId)
+                .stream()
+                .map(invoiceMapper::toVO)
+                .collect(Collectors.toList());
     }
 }

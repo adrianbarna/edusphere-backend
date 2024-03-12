@@ -4,7 +4,6 @@ import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
 import com.edusphere.exceptions.UserNotFoundException;
 import com.edusphere.repositories.UserRepository;
-import com.edusphere.vos.ClassVO;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -25,7 +24,7 @@ public class TeacherUtil {
         if(!userHasTeacherRole(teacherOptional)) {
             throw new UserNotFoundException("User-ul asignat nu este un profesor!");
         }
-        return teacherOptional.get();
+        return teacherOptional.orElseThrow(() -> new UserNotFoundException(teacherId));
     }
 
     public static boolean userHasTeacherRole(Optional<UserEntity> teacherOptional) {

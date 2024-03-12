@@ -92,7 +92,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void getAllClasses_shouldFailForNotAllwedRoles() {
+    public void getAllClasses_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
@@ -101,14 +101,14 @@ public class ClassControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                getAllClasses_shouldFailForNotAllwedRoles(allowedUser);
+                getAllClasses_shouldFailForNotAllowedRoles(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void getAllClasses_shouldFailForNotAllwedRoles(UserEntity userEntity) throws Exception {
+    private void getAllClasses_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 

@@ -2,15 +2,16 @@ package com.edusphere.controllers.utils;
 
 import com.edusphere.controllers.AuthController;
 import com.edusphere.entities.*;
+import com.edusphere.enums.PaymentTypeEnum;
 import com.edusphere.repositories.*;
 import com.edusphere.vos.LoginRequestVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 
 import static com.edusphere.enums.RolesEnum.PARENT;
 import static com.edusphere.enums.RolesEnum.TEACHER;
@@ -37,6 +38,9 @@ public class TestUtils {
 
     @Autowired
     private IncidentRepository incidentRepository;
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -121,16 +125,45 @@ public class TestUtils {
 
     public ChildEntity saveAChildInOrganization(OrganizationEntity organizationEntity){
         UserEntity aParent = saveAParentInOrganization(organizationEntity);
+        return saveAChildWithParentInOrganization(organizationEntity, aParent);
+    }
+
+    public ChildEntity saveAChildWithParentInOrganization(OrganizationEntity organizationEntity, UserEntity parentEntity){
         ClassEntity classEntity = saveAClassInOrganization(organizationEntity);
 
         ChildEntity childEntity = new ChildEntity();
         childEntity.setName(generateRandomString());
         childEntity.setSurname(generateRandomString());
         childEntity.setClassEntity(classEntity);
-        childEntity.setParent(aParent);
+        childEntity.setParent(parentEntity);
         childEntity.setBaseTax(1000);
 
         return childRepository.save(childEntity);
+    }
+
+    public InvoiceEntity saveInvoice(OrganizationEntity organizationEntity){
+        InvoiceEntity invoiceEntity = new InvoiceEntity();
+        ChildEntity childEntity = saveAChildInOrganization(organizationEntity);
+        invoiceEntity.setChild(childEntity);
+        invoiceEntity.setAmount(1000);
+        invoiceEntity.setDueDate(LocalDate.now());
+        invoiceEntity.setIssueDate(LocalDate.now());
+        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
+
+        return invoiceRepository.save(invoiceEntity);
+    }
+
+
+    public InvoiceEntity saveInvoiceForChildOnMonth(ChildEntity childEntity,
+                                                    LocalDate month){
+        InvoiceEntity invoiceEntity = new InvoiceEntity();
+        invoiceEntity.setChild(childEntity);
+        invoiceEntity.setAmount(1000);
+        invoiceEntity.setDueDate(month);
+        invoiceEntity.setIssueDate(month);
+        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
+
+        return invoiceRepository.save(invoiceEntity);
     }
 
     public ChildEntity saveAChildInAnotherOrganization(){
