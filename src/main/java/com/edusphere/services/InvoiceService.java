@@ -1,6 +1,9 @@
 package com.edusphere.services;
 
 
+import com.edusphere.entities.InvoiceEntity;
+import com.edusphere.exceptions.invoices.InvoiceAlreadyPaidException;
+import com.edusphere.exceptions.invoices.InvoiceNotFoundException;
 import com.edusphere.mappers.InvoiceMapper;
 import com.edusphere.repositories.InvoiceRepository;
 import com.edusphere.vos.InvoiceVO;
@@ -138,5 +141,17 @@ public class InvoiceService {
                 .stream()
                 .map(invoiceMapper::toVO)
                 .collect(Collectors.toList());
+    }
+
+    public InvoiceVO markInvoiceAsPaid(Integer invoiceId, Integer organizationId){
+        InvoiceEntity invoiceEntity = invoiceRepository.findByIdAndChildParentOrganizationId(invoiceId, organizationId)
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
+
+        if(invoiceEntity.getIsPaid()){
+            throw  new InvoiceAlreadyPaidException(invoiceId);
+        }
+        invoiceEntity.setIsPaid(true);
+        invoiceRepository.save(invoiceEntity);
+        return invoiceMapper.toVO(invoiceEntity);
     }
 }

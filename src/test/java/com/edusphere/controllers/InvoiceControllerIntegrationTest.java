@@ -2,6 +2,9 @@ package com.edusphere.controllers;
 
 import com.edusphere.controllers.utils.TestUtils;
 import com.edusphere.entities.*;
+import com.edusphere.exceptions.invoices.InvoiceNotFoundException;
+import com.edusphere.repositories.InvoiceRepository;
+import com.edusphere.vos.ClassVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +21,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.edusphere.controllers.utils.TestUtils.asJsonString;
 import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -37,6 +42,9 @@ public class InvoiceControllerIntegrationTest {
 
     @Autowired
     private TestUtils testUtils;
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
 
     @Test
     public void getChildInvoices() {
@@ -212,4 +220,169 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
                 .andExpect(jsonPath("$.error").value("Access Denied"));
     }
+
+    @Test
+    public void markInvoiceAsPaid() {
+        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                markInvoiceAsPaid(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void markInvoiceAsPaid(UserEntity userEntity) throws Exception {
+        InvoiceEntity anInvoice = testUtils.saveInvoice(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassVO classVO = ClassVO.builder()
+                .name(generateRandomString())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
+                                + anInvoice.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(classVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.isPaid").value("true"));
+
+        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
+                new InvoiceNotFoundException(anInvoice.getId()));
+
+        assertTrue(invoiceEntity.getIsPaid());
+    }
+
+    @Test
+    public void markInvoiceAsPaid_shouldFailIfAlreadyPaid() {
+        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
+        try {
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                markInvoiceAsPaid_shouldFailIfAlreadyPaid(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void markInvoiceAsPaid_shouldFailIfAlreadyPaid(UserEntity userEntity) throws Exception {
+        InvoiceEntity anInvoice = testUtils.saveAPaidInvoice(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassVO classVO = ClassVO.builder()
+                .name(generateRandomString())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
+                                + anInvoice.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(classVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + anInvoice.getId() + " este deja platita."))
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));
+
+        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
+                new InvoiceNotFoundException(anInvoice.getId()));
+
+        assertTrue(invoiceEntity.getIsPaid());
+    }
+
+    @Test
+    public void markInvoiceAsPaid_shouldFailForNotAllowedRoles() {
+        final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
+        try {
+            for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
+                markInvoiceAsPaid_shouldFailForNotAllowedRoles(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void markInvoiceAsPaid_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+        InvoiceEntity anInvoice = testUtils.saveAPaidInvoice(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassVO classVO = ClassVO.builder()
+                .name(generateRandomString())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
+                                + anInvoice.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(classVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
+                .andExpect(jsonPath("$.error").value("Access Denied"));
+
+        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
+                new InvoiceNotFoundException(anInvoice.getId()));
+
+        assertTrue(invoiceEntity.getIsPaid());
+    }
+
+    @Test
+    public void markInvoiceAsPaid_shouldFailForAnotherOrganization() {
+        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                markInvoiceAsPaid_shouldFailForAnotherOrganization(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void markInvoiceAsPaid_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
+        OrganizationEntity anOrganization = testUtils.saveOrganization();
+        InvoiceEntity anInvoice = testUtils.saveInvoice(anOrganization);
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassVO classVO = ClassVO.builder()
+                .name(generateRandomString())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
+                                + anInvoice.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(classVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + anInvoice.getId() + " este invalida."))
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));
+
+    }
+
 }

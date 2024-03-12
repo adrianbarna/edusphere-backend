@@ -33,18 +33,19 @@ public class InvoiceController {
     @GetMapping
     @Operation(summary = "Save invoice from organization", description = "Get all users from organization")
     public void saveInvoiceFile() {
-       invoiceService.saveInvoiceToFile("./invoice.pdf");
+        invoiceService.saveInvoiceToFile("./invoice.pdf");
     }
 
 
-    @Operation(summary = "Get invoices by month", description = "Retrieve a list of invoices by month")
+    @Operation(summary = "Get invoices by month for child", description = "Retrieve a list of invoices by month" +
+            "for child")
     @GetMapping("/child/{id}")
     @OwnerOrAdminPermission
     public List<InvoiceVO> getChildInvoicesByMonth(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer childId,
             @Parameter(description = "Month of the invoices to retrieve in YYYY-MM format")
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
-        if(month == null){
+        if (month == null) {
             throw new IllegalArgumentException("Month must not be null");
         }
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
@@ -52,18 +53,30 @@ public class InvoiceController {
         return invoiceService.getChildInvoicesByMonth(childId, month, organizationId);
     }
 
-    @Operation(summary = "Get invoices by month", description = "Retrieve a list of invoices by month")
+    @Operation(summary = "Get invoices by month for parent",
+            description = "Retrieve a list of invoices by month for parent")
     @GetMapping("/parent/{id}")
     @OwnerOrAdminOrParentPermission
     public List<InvoiceVO> getParentInvoicesByMonth(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer childId,
             @Parameter(description = "Month of the invoices to retrieve in YYYY-MM format")
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
-        if(month == null){
+        if (month == null) {
             throw new IllegalArgumentException("Month must not be null");
         }
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
 
         return invoiceService.getParentInvoicesByMonth(childId, month, organizationId);
+    }
+
+    @Operation(summary = "Mark invoice as paid",
+            description = "Mark invoice as paid")
+    @PutMapping("/markAsPaid/{id}")
+    @OwnerOrAdminPermission
+    public InvoiceVO markInvoiceAsPaid(
+            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer invoiceId) {
+        Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
+
+        return invoiceService.markInvoiceAsPaid(invoiceId, organizationId);
     }
 }

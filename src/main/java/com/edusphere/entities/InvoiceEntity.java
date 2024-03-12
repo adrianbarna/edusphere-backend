@@ -30,8 +30,8 @@ public class InvoiceEntity {
     @Column(name = "amount", nullable = false)
     private Integer amount;
 
-    @Column(name = "is_paid")
-    private Boolean isPaid;
+    @Column(name = "is_paid", nullable = false)
+    private Boolean isPaid= false;
 
     @NotNull
     @Enumerated(EnumType.STRING)

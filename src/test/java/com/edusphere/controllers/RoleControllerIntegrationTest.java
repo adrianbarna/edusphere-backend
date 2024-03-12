@@ -186,7 +186,7 @@ public class RoleControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + roleFromAnotherOrganization.getId() + " este invalid pentru organizatia curenta"));
+                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + roleFromAnotherOrganization.getId() + " este invalid."));
     }
 
     @Test
@@ -304,7 +304,7 @@ public class RoleControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
                 .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + role.getId()
-                        + " este invalid pentru organizatia curenta"));
+                        + " este invalid."));
 
         RoleEntity updatedRole = roleRepository.findByName(roleVO.getName()).orElse(null);
         assertNull(updatedRole);
@@ -360,7 +360,7 @@ public class RoleControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + role.getId() + " este invalid pentru organizatia curenta"));
+                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + role.getId() + " este invalid."));
 
         RoleEntity deletedRole = roleRepository.findByName(role.getName()).orElse(null);
         assertNotNull(deletedRole);
@@ -461,7 +461,7 @@ public class RoleControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + role.getId() + " este invalid pentru organizatia curenta"));
+                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + role.getId() + " este invalid."));
 
         UserEntity userWithAssignedRole = userRepository.findById(userToAssignANewRole.getId()).orElse(null);
         assertNotNull(userWithAssignedRole);
@@ -612,7 +612,7 @@ public class RoleControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + roleFromAnotherOrganization.getId() + " este invalid pentru organizatia curenta"));
+                .andExpect(jsonPath("$.message").value("Rolul cu id-ul " + roleFromAnotherOrganization.getId() + " este invalid."));
 
         UserEntity userWithChangedRoles = userRepository.findById(userToChangeTheRole.getId()).orElse(null);
         assertNotNull(userWithChangedRoles);

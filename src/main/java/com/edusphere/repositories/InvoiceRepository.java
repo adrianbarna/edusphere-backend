@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Integer> {
@@ -27,4 +28,6 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Integer>
             "AND EXTRACT(YEAR FROM i.issue_date) = ?3 " +
             "AND u.organization_id = ?4", nativeQuery = true)
     List<InvoiceEntity> findByParentIdAndMonthAndYearAndOrganizationId(Integer parentId, Integer month, Integer year, Integer organizationId);
+
+    Optional<InvoiceEntity> findByIdAndChildParentOrganizationId(Integer invoiceId, Integer organizationId);
 }

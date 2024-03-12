@@ -153,6 +153,19 @@ public class TestUtils {
         return invoiceRepository.save(invoiceEntity);
     }
 
+    public InvoiceEntity saveAPaidInvoice(OrganizationEntity organizationEntity){
+        InvoiceEntity invoiceEntity = new InvoiceEntity();
+        ChildEntity childEntity = saveAChildInOrganization(organizationEntity);
+        invoiceEntity.setChild(childEntity);
+        invoiceEntity.setAmount(1000);
+        invoiceEntity.setDueDate(LocalDate.now());
+        invoiceEntity.setIssueDate(LocalDate.now());
+        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
+        invoiceEntity.setIsPaid(true);
+
+        return invoiceRepository.save(invoiceEntity);
+    }
+
 
     public InvoiceEntity saveInvoiceForChildOnMonth(ChildEntity childEntity,
                                                     LocalDate month){
