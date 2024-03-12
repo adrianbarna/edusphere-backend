@@ -24,6 +24,9 @@ public class SkippedDaysEntity {
     @Column(name = "end_date")
     private Date endDate;
 
+    @Column(name = "proccessed")
+    private Boolean proccessed;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "child_id", nullable = false)
     private ChildEntity child;

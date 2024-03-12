@@ -1,12 +1,18 @@
 package com.edusphere.services;
 
 
+import com.edusphere.entities.ChildEntity;
 import com.edusphere.entities.InvoiceEntity;
+import com.edusphere.exceptions.ChildNotFoundException;
 import com.edusphere.exceptions.invoices.InvoiceAlreadyPaidException;
 import com.edusphere.exceptions.invoices.InvoiceNotFoundException;
 import com.edusphere.mappers.InvoiceMapper;
+import com.edusphere.mappers.SkippedDaysMapper;
+import com.edusphere.repositories.ChildRepository;
 import com.edusphere.repositories.InvoiceRepository;
+import com.edusphere.repositories.SkippedDaysRepository;
 import com.edusphere.vos.InvoiceVO;
+import com.edusphere.vos.SkippedDaysVO;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -15,25 +21,37 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 // just a demo on how to generate an invoice
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
+    private final SkippedDaysRepository skippedDaysRepository;
     private final InvoiceMapper invoiceMapper;
+    private final ChildRepository childRepository;
+    private final SkippedDaysMapper skippedDaysMapper;
 
-    public InvoiceService(InvoiceRepository invoiceRepository, InvoiceMapper invoiceMapper) {
+    public InvoiceService(InvoiceRepository invoiceRepository, SkippedDaysRepository skippedDaysRepository,
+                          InvoiceMapper invoiceMapper, ChildRepository childRepository, SkippedDaysMapper skippedDaysMapper) {
         this.invoiceRepository = invoiceRepository;
+        this.skippedDaysRepository = skippedDaysRepository;
         this.invoiceMapper = invoiceMapper;
+        this.childRepository = childRepository;
+        this.skippedDaysMapper = skippedDaysMapper;
     }
 
     private ByteArrayInputStream generateInvoice() {
@@ -127,31 +145,117 @@ public class InvoiceService {
         }
     }
 
+    @Transactional
+    //TODO add tests for skipDaysPeriods
     public List<InvoiceVO> getChildInvoicesByMonth(Integer childId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
-                month.getYear(), organizationId)
+        ChildEntity childEntity = getChildEntity(childId, organizationId);
+
+        List<SkippedDaysVO> unprocessedSkipDays = getSkippedDaysPeriods(childId);
+        List<InvoiceVO> invoices = getInvoicesForChildForMonth(childId, month, organizationId);
+
+
+        invoices.forEach(invoiceVO -> {
+            List<SkippedDaysVO> unprocessedBeforeProcessingInvoice = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
+
+            unprocessedBeforeProcessingInvoice.forEach(skippedDaysVO -> {
+                int amountForCurrentSkipDaysPeriod = getAmountForSkippedDaysEntity(childEntity, skippedDaysVO);
+
+                if (skipDaysAmountCanBeSubstractedFromInvoiceAmount(invoiceVO, amountForCurrentSkipDaysPeriod)) {
+                    substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(invoiceVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
+                }
+            });
+        });
+
+        return invoices;
+    }
+
+    private ChildEntity getChildEntity(Integer childId, Integer organizationId) {
+        return childRepository.findByIdAndParentOrganizationId(childId, organizationId)
+                .orElseThrow(() -> new ChildNotFoundException(childId));
+    }
+
+    private static void substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(InvoiceVO invoiceVO, SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
+        invoiceVO.setAmountWithSkipDays(invoiceVO.getAmountWithoutSkipDays() - amountForSkippedDays);
+        invoiceVO.addSkippedDaysVO(skippedDaysVO);
+        skippedDaysVO.setProccessed(true);
+        skippedDaysVO.setAmount(amountForSkippedDays);
+    }
+
+    private static boolean skipDaysAmountCanBeSubstractedFromInvoiceAmount(InvoiceVO invoiceVO, int amountForSkippedDays) {
+        return amountForSkippedDays < invoiceVO.getAmountWithSkipDays() && invoiceVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
+    }
+
+    private static List<SkippedDaysVO> getUnproccessedSkipDaysFromInMemorySkipDays(List<SkippedDaysVO> unprocessedSkipDays) {
+        return unprocessedSkipDays.stream()
+                .filter(skippedDaysEntity -> !skippedDaysEntity.getProccessed())
+                .toList();
+    }
+
+    private List<SkippedDaysVO> getSkippedDaysPeriods(Integer childId) {
+        return skippedDaysRepository.findUnproccessedByChildId(childId)
                 .stream()
-                .map(invoiceMapper::toVO)
-                .collect(Collectors.toList());
+                .map(skippedDaysMapper::toVO)
+                .toList();
     }
 
     public List<InvoiceVO> getParentInvoicesByMonth(Integer parentId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId,month.getMonthValue(),
+        return getInvoicesForParentId(parentId, month, organizationId);
+    }
+
+    public InvoiceVO markInvoiceAsPaid(Integer invoiceId, Integer organizationId) {
+        InvoiceEntity invoiceEntity = invoiceRepository.findByIdAndChildParentOrganizationId(invoiceId, organizationId)
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
+
+        if (invoiceEntity.getIsPaid()) {
+            throw new InvoiceAlreadyPaidException(invoiceId);
+        }
+        invoiceEntity.setIsPaid(true);
+        invoiceRepository.save(invoiceEntity);
+        return invoiceMapper.toVO(invoiceEntity);
+    }
+
+    private List<InvoiceVO> getInvoicesForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
+        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
                         month.getYear(), organizationId)
                 .stream()
                 .map(invoiceMapper::toVO)
                 .collect(Collectors.toList());
     }
 
-    public InvoiceVO markInvoiceAsPaid(Integer invoiceId, Integer organizationId){
-        InvoiceEntity invoiceEntity = invoiceRepository.findByIdAndChildParentOrganizationId(invoiceId, organizationId)
-                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
+    private List<InvoiceVO> getInvoicesForParentId(Integer parentId, YearMonth month, Integer organizationId) {
+        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
+                        month.getYear(), organizationId)
+                .stream()
+                .map(invoiceMapper::toVO)
+                .collect(Collectors.toList());
+    }
 
-        if(invoiceEntity.getIsPaid()){
-            throw  new InvoiceAlreadyPaidException(invoiceId);
+    private int getAmountForSkippedDaysEntity(ChildEntity child, SkippedDaysVO skippedDaysVO) {
+        int numberOfWeekdays = getWeekdayCountForSkippedDays(skippedDaysVO);
+
+        return child.getMealPrice() * numberOfWeekdays;
+    }
+
+    private int getWeekdayCountForSkippedDays(SkippedDaysVO skippedDaysEntity) {
+        LocalDate startDate = skippedDaysEntity.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate endDate = skippedDaysEntity.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        return getWeekdayCount(startDate, endDate);
+    }
+
+    private int getWeekdayCount(LocalDate startDate, LocalDate endDate) {
+        int weekdayCount = 0;
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)) {
+            // Check if the current date is a weekday (Monday to Friday)
+            if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                weekdayCount++;
+            }
+            // Move to the next day
+            currentDate = currentDate.plusDays(1);
         }
-        invoiceEntity.setIsPaid(true);
-        invoiceRepository.save(invoiceEntity);
-        return invoiceMapper.toVO(invoiceEntity);
+
+        return weekdayCount;
     }
 }

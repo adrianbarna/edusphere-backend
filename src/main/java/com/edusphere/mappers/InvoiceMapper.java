@@ -6,6 +6,8 @@ import com.edusphere.repositories.ChildRepository;
 import com.edusphere.vos.InvoiceVO;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 @Component
 public class InvoiceMapper {
 
@@ -27,7 +29,7 @@ public class InvoiceMapper {
                 .child(childRepository.findByIdAndParentOrganizationId(invoiceVO.getChildVO().getId(), organizationId)
                         .orElseThrow(() -> new ChildNotFoundException(invoiceVO.getChildVO().getId()))
                 )
-                .amount(invoiceVO.getAmount())
+                .amount(invoiceVO.getAmountWithoutSkipDays())
                 .issueDate(invoiceVO.getIssueDate())
                 .dueDate(invoiceVO.getDueDate())
                 .isPaid(invoiceVO.getIsPaid())
@@ -43,11 +45,13 @@ public class InvoiceMapper {
         return InvoiceVO.builder()
                 .id(invoiceEntity.getId())
                 .childVO(childMapper.toVO(invoiceEntity.getChild()))
-                .amount(invoiceEntity.getAmount())
+                .amountWithoutSkipDays(invoiceEntity.getAmount())
+                .amountWithSkipDays(invoiceEntity.getAmount())
                 .issueDate(invoiceEntity.getIssueDate())
                 .dueDate(invoiceEntity.getDueDate())
                 .isPaid(invoiceEntity.getIsPaid())
                 .payType(invoiceEntity.getPayType())
+                .skippedDaysVOList(new ArrayList<>())
                 .build();
     }
 }

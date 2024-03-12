@@ -73,6 +73,7 @@ public class InvoiceController {
             description = "Mark invoice as paid")
     @PutMapping("/markAsPaid/{id}")
     @OwnerOrAdminPermission
+    //TODO add unmarkInvoiceAsPaid method
     public InvoiceVO markInvoiceAsPaid(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer invoiceId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
