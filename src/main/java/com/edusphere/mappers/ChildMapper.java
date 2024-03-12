@@ -29,6 +29,8 @@ public class ChildMapper {
                 .surname(childVO.getSurname())
                 .parent(userRepository.findByIdAndOrganizationId(childVO.getParentId(), organizationId).orElseThrow(() ->new UserNotFoundException(childVO.getParentId())))
                 .classEntity(classRepository.findByIdAndOrganizationId(childVO.getClassId(), organizationId).orElseThrow(() -> new ClassNotFoundException(childVO.getClassId())))
+                .baseTax(childVO.getBaseTax())
+                .mealPrice(childVO.getMealPrice()!=null ? childVO.getMealPrice() :0)
                 .build();
     }
 
@@ -39,6 +41,8 @@ public class ChildMapper {
                 .surname(childEntity.getSurname())
                 .parentId(childEntity.getParent() != null ? childEntity.getParent().getId() : null)
                 .classId(childEntity.getClassEntity() != null ? childEntity.getClassEntity().getId() : null)
+                .baseTax(childEntity.getBaseTax())
+                .mealPrice(childEntity.getMealPrice())
                 .build();
     }
 }

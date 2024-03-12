@@ -318,6 +318,7 @@ public class ChildControllerIntegrationTest {
                 .surname(generateRandomString())
                 .parentId(parent.getId())
                 .classId(aClass.getId())
+                .baseTax(2000)
                 .build();
 
         // Perform the mockMvc request

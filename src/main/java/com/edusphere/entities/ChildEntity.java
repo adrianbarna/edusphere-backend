@@ -33,7 +33,7 @@ public class ChildEntity {
 
     @NotNull
     @Column(name = "meal_price", nullable = false)
-    private Integer mealPrice;
+    private Integer mealPrice = 0;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

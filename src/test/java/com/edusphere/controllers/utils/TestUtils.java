@@ -128,6 +128,7 @@ public class TestUtils {
         childEntity.setSurname(generateRandomString());
         childEntity.setClassEntity(classEntity);
         childEntity.setParent(aParent);
+        childEntity.setBaseTax(1000);
 
         return childRepository.save(childEntity);
     }
@@ -142,6 +143,7 @@ public class TestUtils {
         ClassEntity classEntity = saveAClassInOrganization(anotherOrganization);
         childEntity.setClassEntity(classEntity);
         childEntity.setParent(aParent);
+        childEntity.setBaseTax(3000);
 
         return childRepository.save(childEntity);
     }
