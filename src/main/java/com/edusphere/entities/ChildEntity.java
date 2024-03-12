@@ -52,6 +52,17 @@ public class ChildEntity {
     @JoinColumn(name = "parent_id", nullable = false)
     private UserEntity parent;
 
+    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SkippedDaysEntity> skippedDays = new LinkedHashSet<>();
+
+    public Set<SkippedDaysEntity> getSkippedDays() {
+        return skippedDays;
+    }
+
+    public void setSkippedDays(Set<SkippedDaysEntity> skippedDays) {
+        this.skippedDays = skippedDays;
+    }
+
     public UserEntity getParent() {
         return parent;
     }
