@@ -174,23 +174,6 @@ public class InvoiceService {
                 .orElseThrow(() -> new ChildNotFoundException(childId));
     }
 
-    private static void substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(InvoiceVO invoiceVO, SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
-        invoiceVO.setAmountWithSkipDays(invoiceVO.getAmountWithoutSkipDays() - amountForSkippedDays);
-        invoiceVO.addSkippedDaysVO(skippedDaysVO);
-        skippedDaysVO.setProccessed(true);
-        skippedDaysVO.setAmount(amountForSkippedDays);
-    }
-
-    private static boolean skipDaysAmountCanBeSubstractedFromInvoiceAmount(InvoiceVO invoiceVO, int amountForSkippedDays) {
-        return amountForSkippedDays < invoiceVO.getAmountWithSkipDays() && invoiceVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
-    }
-
-    private static List<SkippedDaysVO> getUnproccessedSkipDaysFromInMemorySkipDays(List<SkippedDaysVO> unprocessedSkipDays) {
-        return unprocessedSkipDays.stream()
-                .filter(skippedDaysEntity -> !skippedDaysEntity.getProccessed())
-                .toList();
-    }
-
     private List<SkippedDaysVO> getSkippedDaysPeriods(Integer childId) {
         return skippedDaysRepository.findUnproccessedByChildId(childId)
                 .stream()
@@ -257,5 +240,22 @@ public class InvoiceService {
         }
 
         return weekdayCount;
+    }
+
+    private static void substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(InvoiceVO invoiceVO, SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
+        invoiceVO.setAmountWithSkipDays(invoiceVO.getAmountWithoutSkipDays() - amountForSkippedDays);
+        invoiceVO.addSkippedDaysVO(skippedDaysVO);
+        skippedDaysVO.setProccessed(true);
+        skippedDaysVO.setAmount(amountForSkippedDays);
+    }
+
+    private static boolean skipDaysAmountCanBeSubstractedFromInvoiceAmount(InvoiceVO invoiceVO, int amountForSkippedDays) {
+        return amountForSkippedDays < invoiceVO.getAmountWithSkipDays() && invoiceVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
+    }
+
+    private static List<SkippedDaysVO> getUnproccessedSkipDaysFromInMemorySkipDays(List<SkippedDaysVO> unprocessedSkipDays) {
+        return unprocessedSkipDays.stream()
+                .filter(skippedDaysEntity -> !skippedDaysEntity.getProccessed())
+                .toList();
     }
 }

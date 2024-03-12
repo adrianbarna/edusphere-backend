@@ -89,7 +89,7 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.[*].id", hasItem(invoiceEntity.getId())))
                 .andExpect(jsonPath("$.[*].id", hasItem(secondInvoice.getId())))
-                .andExpect(jsonPath("$.[*].amount", hasItem(invoiceEntity.getAmount())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceEntity.getAmount())))
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceEntityFromPreviousMonth.getId()))))
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceForAnotherChild.getId()))));
     }
@@ -132,6 +132,7 @@ public class InvoiceControllerIntegrationTest {
 
 
     @Test
+    //TODO cover the cases when child has skipDays
     public void getParentInvoices() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
@@ -179,8 +180,8 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.[*].id", hasItem(invoiceEntity.getId())))
                 .andExpect(jsonPath("$.[*].id", hasItem(invoiceForSecondChild.getId())))
-                .andExpect(jsonPath("$.[*].amount", hasItem(invoiceEntity.getAmount())))
-                .andExpect(jsonPath("$.[*].amount", hasItem(invoiceForSecondChild.getAmount())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceEntity.getAmount())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceForSecondChild.getAmount())))
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceEntityFromPreviousMonth.getId()))))
                 .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceForAnotherParent.getId()))));
     }
