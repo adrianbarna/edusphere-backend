@@ -162,14 +162,15 @@ public class PaymentService {
         return getPaymentsForParentId(parentId, month, organizationId);
     }
 
-    public PaymentVO PaymentAsPaid(Integer paymentId, Integer organizationId) {
+    public PaymentVO markPaymentAsPaidOrUnpaid(Integer paymentId, boolean isPaid, Integer organizationId) {
         PaymentEntity paymentEntity = paymentRepository.findByIdAndChildParentOrganizationId(paymentId, organizationId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        if (paymentEntity.getIsPaid()) {
+        if (isPaid && paymentEntity.getIsPaid()) {
             throw new PaymentAlreadyPaidException(paymentId);
         }
-        paymentEntity.setIsPaid(true);
+
+        paymentEntity.setIsPaid(isPaid);
         paymentRepository.save(paymentEntity);
         return paymentMapper.toVO(paymentEntity);
     }

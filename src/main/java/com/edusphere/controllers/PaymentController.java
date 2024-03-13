@@ -69,15 +69,15 @@ public class PaymentController {
         return paymentService.getParentPaymentsByMonth(childId, month, organizationId);
     }
 
-    @Operation(summary = "Mark payment as paid",
-            description = "Mark payment as paid")
-    @PutMapping("/markAsPaid/{id}")
+    @Operation(summary = "Mark payment as paid ",
+            description = "Mark payment as paid or unpaid")
+    @PutMapping("/markAsPaid/{id}/{isPaid}")
     @OwnerOrAdminPermission
-    //TODO add unmarkPaymentAsPaid method
-    public PaymentVO markPaymentAsPaid(
-            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer paymentId) {
+    public PaymentVO markPayment(
+            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer paymentId,
+            @Parameter(description = "Marker to mark as paid or not") @PathVariable("isPaid") boolean isPaid) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
 
-        return paymentService.PaymentAsPaid(paymentId, organizationId);
+        return paymentService.markPaymentAsPaidOrUnpaid(paymentId, isPaid, organizationId);
     }
 }

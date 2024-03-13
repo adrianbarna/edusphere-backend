@@ -26,8 +26,7 @@ import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @AutoConfigureMockMvc
@@ -250,7 +249,7 @@ public class PaymentControllerIntegrationTest {
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
-                                + aPayment.getId())
+                                + aPayment.getId() + "/true")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -263,6 +262,49 @@ public class PaymentControllerIntegrationTest {
                 new PaymentNotFoundException(aPayment.getId()));
 
         assertTrue(PaymentEntity.getIsPaid());
+    }
+
+    @Test
+    public void markPaymentAsUnpaid() {
+        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+        OrganizationEntity organizationEntity = testUtils.saveOrganization();
+        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
+        try {
+            // Test adding an organization when called by different users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                markPaymentAsUnpaid(allowedUser);
+            }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
+    }
+
+    private void markPaymentAsUnpaid(UserEntity userEntity) throws Exception {
+        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
+        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassVO classVO = ClassVO.builder()
+                .name(generateRandomString())
+                .build();
+
+        // Perform the mockMvc request
+        mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
+                                + aPayment.getId() + "/false")
+                        .header("Authorization", "Bearer " + token)
+                        .content(asJsonString(classVO))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.isPaid").value("false"));
+
+        PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
+                new PaymentNotFoundException(aPayment.getId()));
+
+        assertFalse(PaymentEntity.getIsPaid());
     }
 
     @Test
@@ -292,7 +334,7 @@ public class PaymentControllerIntegrationTest {
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
-                                + aPayment.getId())
+                                + aPayment.getId() + "/true")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -307,7 +349,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPaymentAsPaid_shouldFailForNotAllowedRoles() {
+    public void markPayment_shouldFailForNotAllowedRoles() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
@@ -317,14 +359,14 @@ public class PaymentControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                markPaymentAsPaid_shouldFailForNotAllowedRoles(allowedUser);
+                markPayment_shouldFailForNotAllowedRoles(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markPaymentAsPaid_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+    private void markPayment_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
         PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
@@ -333,7 +375,7 @@ public class PaymentControllerIntegrationTest {
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
-                                + aPayment.getId())
+                                + aPayment.getId() + "/true")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -348,7 +390,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPaymentAsPaid_shouldFailForAnotherOrganization() {
+    public void markPayment_shouldFailForAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -359,14 +401,14 @@ public class PaymentControllerIntegrationTest {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                markPaymentAsPaid_shouldFailForAnotherOrganization(allowedUser);
+                markPayment_shouldFailForAnotherOrganization(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markPaymentAsPaid_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
+    private void markPayment_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
         OrganizationEntity anOrganization = testUtils.saveOrganization();
         PaymentEntity aPayment = testUtils.savePayment(anOrganization);
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
@@ -376,7 +418,7 @@ public class PaymentControllerIntegrationTest {
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
-                                + aPayment.getId())
+                                + aPayment.getId() + "/true")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
