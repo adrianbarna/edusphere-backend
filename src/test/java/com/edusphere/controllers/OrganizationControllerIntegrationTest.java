@@ -1,6 +1,9 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.OrganizationTestUtils;
+import com.edusphere.controllers.utils.RoleTestUtils;
+import com.edusphere.controllers.utils.TokenTestUtils;
+import com.edusphere.controllers.utils.UserTestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
@@ -24,8 +27,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,25 +45,34 @@ public class OrganizationControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TestUtils testUtils;
+    private OrganizationRepository organizationRepository;
 
     @Autowired
-    private OrganizationRepository organizationRepository;
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
+    
+    @Autowired
+    private TokenTestUtils tokenUtils;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
     }
 
     @Test
@@ -77,7 +89,7 @@ public class OrganizationControllerIntegrationTest {
 
 
     private void addOrganizationWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         OrganizationVO organizationVO = OrganizationVO.builder()
                 .name(generateRandomString())
                 .description(generateRandomString())
@@ -116,7 +128,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     private void addOrganizationWhenCalledByUserShouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         OrganizationVO organizationVO = OrganizationVO.builder()
                 .name(generateRandomString())
                 .description(generateRandomString())
@@ -149,10 +161,10 @@ public class OrganizationControllerIntegrationTest {
     }
 
     private void getAllOrganizationsWhenCalledByUser(UserEntity allowedUser) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/organization")
-                .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.[*].id", hasItem(organizationEntity.getId())))
@@ -179,7 +191,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     private void getAllOrganizationsWhenCalledByUserShouldFailForNotAllowedUser(UserEntity allowedUser) throws Exception {
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/organization")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
@@ -187,21 +199,21 @@ public class OrganizationControllerIntegrationTest {
 
     @Test
     public void getOrganizationById() {
-            try {
-                // Test adding an organization should fail for not allowed users.
-                for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                    getOrganizationByIdWhenCalledByUser(allowedUser);
-                }
-            } catch (Exception e) {
-                fail("Test failed due to an exception: " + e.getMessage());
+        try {
+            // Test adding an organization should fail for not allowed users.
+            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
+                getOrganizationByIdWhenCalledByUser(allowedUser);
             }
+        } catch (Exception e) {
+            fail("Test failed due to an exception: " + e.getMessage());
+        }
     }
 
     private void getOrganizationByIdWhenCalledByUser(UserEntity allowedUser) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", organizationEntity.getId())
-                .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(organizationEntity.getId()))
@@ -222,8 +234,8 @@ public class OrganizationControllerIntegrationTest {
     }
 
     private void getOrganizationByIdWhenCalledByUserShoudFailForNotAllowedUser(UserEntity allowedUser) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", organizationEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
@@ -233,9 +245,9 @@ public class OrganizationControllerIntegrationTest {
     public void getOrganizationByIdShouldFailForInvalidId() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+                String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
                 mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", -1)
-                        .header("Authorization", "Bearer " + token))
+                                .header("Authorization", "Bearer " + token))
                         .andExpect(MockMvcResultMatchers.status().isBadRequest());
             }
         } catch (Exception e) {
@@ -247,8 +259,8 @@ public class OrganizationControllerIntegrationTest {
     public void updateOrganization() {
         try {
             // Test updating an organization.
-            OrganizationEntity organizationEntity = testUtils.saveOrganization();
-            String token = testUtils.getTokenForUser(allowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
+            OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+            String token = tokenUtils.getTokenForUser(allowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
             OrganizationVO updatedOrganizationVO = OrganizationVO.builder()
                     .name("Updated Org")
@@ -275,8 +287,8 @@ public class OrganizationControllerIntegrationTest {
     public void updateOrganizationShouldFailForNotAllowedUser() {
         try {
             // Test updating an organization should fail for not allowed users.
-            OrganizationEntity organizationEntity = testUtils.saveOrganization();
-            String token = testUtils.getTokenForUser(notAllowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
+            OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+            String token = tokenUtils.getTokenForUser(notAllowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
             OrganizationVO updatedOrganizationVO = OrganizationVO.builder()
                     .name("Updated Org")
@@ -297,8 +309,8 @@ public class OrganizationControllerIntegrationTest {
     public void deleteOrganization() {
         try {
             // Test deleting an organization.
-            OrganizationEntity organizationEntity = testUtils.saveOrganization();
-            String token = testUtils.getTokenForUser(allowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
+            OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+            String token = tokenUtils.getTokenForUser(allowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
             mockMvc.perform(MockMvcRequestBuilders.delete("/organization/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token))
@@ -315,8 +327,8 @@ public class OrganizationControllerIntegrationTest {
     public void deleteOrganizationShouldFailForNotAllowedUser() {
         try {
             // Test deleting an organization should fail for not allowed users.
-            OrganizationEntity organizationEntity = testUtils.saveOrganization();
-            String token = testUtils.getTokenForUser(notAllowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
+            OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+            String token = tokenUtils.getTokenForUser(notAllowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
             mockMvc.perform(MockMvcRequestBuilders.delete("/organization/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token))

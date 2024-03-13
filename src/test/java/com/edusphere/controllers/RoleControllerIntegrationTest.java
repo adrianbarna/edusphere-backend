@@ -1,6 +1,9 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.OrganizationTestUtils;
+import com.edusphere.controllers.utils.RoleTestUtils;
+import com.edusphere.controllers.utils.TokenTestUtils;
+import com.edusphere.controllers.utils.UserTestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
@@ -25,8 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,22 +51,31 @@ public class RoleControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private TestUtils testUtils;
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
+
+    @Autowired
+    private TokenTestUtils tokenUtils;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, ownerRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, ownerRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, parentRole));
     }
 
     @Test
@@ -78,9 +90,9 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getAllRolesWhenCalledByUser(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherEntity = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), anotherEntity);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        OrganizationEntity anotherEntity = organizationUtils.saveOrganization();
+        RoleEntity roleFromAnotherOrganization = roleUtils.saveRole(generateRandomString(), anotherEntity);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         List<RoleEntity> organizationRoles = roleRepository.findByOrganizationId(userEntity.getOrganization().getId());
 
@@ -105,7 +117,7 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getAllRolesWhenCalledByUserShouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
 
         mockMvc.perform(MockMvcRequestBuilders.get("/role")
@@ -128,9 +140,9 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getRoleByIdWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity aRole = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        RoleEntity aRole = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
@@ -152,9 +164,9 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getRoleByIdWhenCalledByUserShouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        RoleEntity aRole = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        RoleEntity aRole = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
@@ -176,10 +188,10 @@ public class RoleControllerIntegrationTest {
     }
 
     private void getRoleByIdWhenCalledByUserShouldFailWhenTakingFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherEntity = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), anotherEntity);
+        OrganizationEntity anotherEntity = organizationUtils.saveOrganization();
+        RoleEntity roleFromAnotherOrganization = roleUtils.saveRole(generateRandomString(), anotherEntity);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.get("/role/" + roleFromAnotherOrganization.getId())
                         .header("Authorization", "Bearer " + token)
@@ -201,7 +213,7 @@ public class RoleControllerIntegrationTest {
     }
 
     private void createRoleWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
@@ -229,7 +241,7 @@ public class RoleControllerIntegrationTest {
     }
 
     private void createRoleShouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
@@ -257,10 +269,10 @@ public class RoleControllerIntegrationTest {
     }
 
     private void updateRoleWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity role = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
         assertNotNull(role);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
@@ -288,11 +300,11 @@ public class RoleControllerIntegrationTest {
     }
 
     private void updateRoleShouldFailWhenRoleFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), anotherOrganization);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), anotherOrganization);
         assertNotNull(role);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
@@ -323,10 +335,10 @@ public class RoleControllerIntegrationTest {
     }
 
     private void deleteRoleWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity role = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
         assertNotNull(role);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
                         .header("Authorization", "Bearer " + token)
@@ -349,11 +361,11 @@ public class RoleControllerIntegrationTest {
     }
 
     private void deleteRoleShouldFailWhenCalledByUserFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), anotherOrganization);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), anotherOrganization);
         assertNotNull(role);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
                         .header("Authorization", "Bearer " + token)
@@ -378,11 +390,11 @@ public class RoleControllerIntegrationTest {
     }
 
     private void deleteRole_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), anotherOrganization);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), anotherOrganization);
         assertNotNull(role);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
                         .header("Authorization", "Bearer " + token)
@@ -408,13 +420,13 @@ public class RoleControllerIntegrationTest {
     }
 
     private void assignRoleToUserWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity role = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
-        UserEntity userToAssignANewRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        UserEntity userToAssignANewRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
         assertNotNull(role);
 
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
@@ -443,14 +455,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void assignRoleFromAnotherOrganizationToUserShouldFail(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), anotherOrganization);
-        UserEntity userToAssignANewRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), anotherOrganization);
+        UserEntity userToAssignANewRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
         assertNotNull(role);
 
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
@@ -481,14 +493,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void assignRole_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), anotherOrganization);
-        UserEntity userToAssignANewRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), anotherOrganization);
+        UserEntity userToAssignANewRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
         assertNotNull(role);
 
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
@@ -519,14 +531,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void assignRoleToUserFromAnotherOrganizationShouldFail(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity role = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
-        UserEntity userFromAnotherOrganization = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        UserEntity userFromAnotherOrganization = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 anotherOrganization, userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
         assertNotNull(role);
 
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userFromAnotherOrganization.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
@@ -558,13 +570,13 @@ public class RoleControllerIntegrationTest {
     }
 
     private void changeRolesToUserWhenCalledByUser(UserEntity userEntity) throws Exception {
-        RoleEntity role = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        RoleEntity role = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
         assertNotNull(role);
 
-        UserEntity userToChangeTheRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        UserEntity userToChangeTheRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(role.getId())); // Change roles to only "ADMIN"
@@ -594,14 +606,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void changeRolesToUserShouldFailWhenAddingRoleFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), anotherOrganization);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity roleFromAnotherOrganization = roleUtils.saveRole(generateRandomString(), anotherOrganization);
         assertNotNull(roleFromAnotherOrganization);
 
-        UserEntity userToChangeTheRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        UserEntity userToChangeTheRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"
@@ -633,14 +645,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void changeRoles_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), anotherOrganization);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity roleFromAnotherOrganization = roleUtils.saveRole(generateRandomString(), anotherOrganization);
         assertNotNull(roleFromAnotherOrganization);
 
-        UserEntity userToChangeTheRole = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        UserEntity userToChangeTheRole = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 userEntity.getOrganization(), userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"
@@ -673,14 +685,14 @@ public class RoleControllerIntegrationTest {
     }
 
     private void changeRolesShouldFailWhenAddingRoleToUserFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        RoleEntity roleFromAnotherOrganization = testUtils.saveRole(generateRandomString(), userEntity.getOrganization());
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        RoleEntity roleFromAnotherOrganization = roleUtils.saveRole(generateRandomString(), userEntity.getOrganization());
         assertNotNull(roleFromAnotherOrganization);
 
-        UserEntity userFromAnotherOrganization = testUtils.saveUser(generateRandomString(), generateRandomString(),
+        UserEntity userFromAnotherOrganization = userUtils.saveUser(generateRandomString(), generateRandomString(),
                 anotherOrganization, userEntity.getRoles().stream().findFirst().orElseThrow(() -> new RoleNotFoundException("Rolul nu a fost gasit")));
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
         AssignRoleRequestWrapperVO assignRoleRequestWrapperVO = new AssignRoleRequestWrapperVO();
         assignRoleRequestWrapperVO.setUserId(userFromAnotherOrganization.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"

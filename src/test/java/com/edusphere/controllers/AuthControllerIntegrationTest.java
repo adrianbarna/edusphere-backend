@@ -1,6 +1,8 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.OrganizationTestUtils;
+import com.edusphere.controllers.utils.RoleTestUtils;
+import com.edusphere.controllers.utils.UserTestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
@@ -17,8 +19,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.OWNER;
 
 @AutoConfigureMockMvc
@@ -32,15 +34,19 @@ public class AuthControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TestUtils testUtils;
+    private OrganizationTestUtils organizationUtils;
 
+    @Autowired
+    private RoleTestUtils roleUtils;
 
+    @Autowired
+    private UserTestUtils userUtils;
 
     @Test
     public void authenticateUser() throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity roleEntity = testUtils.saveRole(OWNER.toString(), organizationEntity);
-        UserEntity userEntity = testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, roleEntity);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity roleEntity = roleUtils.saveRole(OWNER.toString(), organizationEntity);
+        UserEntity userEntity = userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, roleEntity);
 
         LoginRequestVO loginRequestVO = new LoginRequestVO();
         loginRequestVO.setUsername(userEntity.getUsername());

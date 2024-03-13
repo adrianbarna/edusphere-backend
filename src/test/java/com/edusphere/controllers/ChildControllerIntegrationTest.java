@@ -1,7 +1,7 @@
 package com.edusphere.controllers;
 
 import com.edusphere.controllers.exceptions.AssertionFailedError;
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.*;
 import com.edusphere.entities.*;
 import com.edusphere.repositories.ChildRepository;
 import com.edusphere.vos.ChildVO;
@@ -23,8 +23,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -42,25 +42,40 @@ public class ChildControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TestUtils testUtils;
-
-    @Autowired
     private ChildRepository childRepository;
 
+    @Autowired
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private TokenTestUtils tokenUtils;
+
+    @Autowired
+    private ChildTestUtils childUtils;
+
+    @Autowired
+    private ClassTestUtils classUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
+    
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
     }
 
 
@@ -76,10 +91,10 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getAllChildren(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        ChildEntity childFromAnotherOrganization = testUtils.saveAChildInAnotherOrganization();
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        ChildEntity childFromAnotherOrganization = childUtils.saveAChildInAnotherOrganization();
 
 
         mockMvc.perform(MockMvcRequestBuilders.get("/child")
@@ -103,7 +118,7 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getAllChildren_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/child")
                         .header("Authorization", "Bearer " + token)
@@ -126,8 +141,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildById(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -149,9 +164,9 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildById_shouldFailWhenTakenFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization();
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(anotherOrganizationEntity);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity anotherOrganizationEntity = organizationUtils.saveOrganization();
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(anotherOrganizationEntity);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -173,8 +188,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildById_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -195,8 +210,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildByParentId(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -218,9 +233,9 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganizationEntity = testUtils.saveOrganization();
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(anotherOrganizationEntity);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity anotherOrganizationEntity = organizationUtils.saveOrganization();
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(anotherOrganizationEntity);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -242,8 +257,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildByParentId_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -264,8 +279,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildForParent(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(childEntity.getParent().getUsername(), PASSWORD);
+        ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(childEntity.getParent().getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -287,8 +302,7 @@ public class ChildControllerIntegrationTest {
     }
 
     private void getChildForParen_shouldFailWhenRetrievingWrongChild(UserEntity userEntity) throws Exception {
-        ChildEntity childEntity = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -310,9 +324,9 @@ public class ChildControllerIntegrationTest {
     }
 
     private void addChild(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity parent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -354,10 +368,10 @@ public class ChildControllerIntegrationTest {
     }
 
     private void addChildInAClassFromAnotherOrganization_shouldFail(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity parent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        ClassEntity aClass = testUtils.saveAClassInOrganization(anotherOrganization);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        ClassEntity aClass = classUtils.saveAClassInOrganization(anotherOrganization);
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -390,9 +404,9 @@ public class ChildControllerIntegrationTest {
     }
 
     private void addChildWithParentFromAnotherOrganization_shouldFail(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity parentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity parentFromAnotherOrganization = userUtils.saveAParentInAnotherOrganization();
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -425,11 +439,11 @@ public class ChildControllerIntegrationTest {
     }
 
     private void updateChild(UserEntity userEntity) throws Exception {
-        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childToBeUpdated = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        UserEntity aParent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -469,11 +483,11 @@ public class ChildControllerIntegrationTest {
     }
 
     private void updateChild_shouldFailWhenParentInAnotherOrganization(UserEntity userEntity) throws Exception {
-        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childToBeUpdated = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        UserEntity parentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        UserEntity parentFromAnotherOrganization = userUtils.saveAParentInAnotherOrganization();
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -512,11 +526,11 @@ public class ChildControllerIntegrationTest {
     }
 
     private void updateChild_shouldFailWhenClassInAnotherOrganization(UserEntity userEntity) throws Exception {
-        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childToBeUpdated = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ClassEntity aClass = testUtils.saveAClassInAnotherOrganization();
+        UserEntity aParent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInAnotherOrganization();
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -555,11 +569,11 @@ public class ChildControllerIntegrationTest {
     }
 
     private void updateChild_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
-        ChildEntity childToBeUpdated = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity childToBeUpdated = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ClassEntity aClass = testUtils.saveAClassInAnotherOrganization();
+        UserEntity aParent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInAnotherOrganization();
         ChildVO childVO = ChildVO.builder()
                 .name(generateRandomString())
                 .surname(generateRandomString())
@@ -597,8 +611,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void deleteChild(UserEntity userEntity) throws Exception {
-        ChildEntity aChild = testUtils.saveAChildInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity aChild = childUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -619,8 +633,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void deleteChild_shouldFailWhenChildInAnotherOrganization(UserEntity userEntity) throws Exception {
-        ChildEntity aChild = testUtils.saveAChildInAnotherOrganization();
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity aChild = childUtils.saveAChildInAnotherOrganization();
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -641,8 +655,8 @@ public class ChildControllerIntegrationTest {
     }
 
     private void deleteChild_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
-        ChildEntity aChild = testUtils.saveAChildInAnotherOrganization();
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity aChild = childUtils.saveAChildInAnotherOrganization();
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))

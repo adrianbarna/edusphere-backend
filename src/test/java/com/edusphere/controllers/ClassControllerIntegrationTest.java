@@ -1,6 +1,6 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.*;
 import com.edusphere.entities.ClassEntity;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
@@ -25,8 +25,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -45,23 +45,35 @@ public class ClassControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TestUtils testUtils;
+    private ClassRepository classRepository;
 
     @Autowired
-    private ClassRepository classRepository;
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private TokenTestUtils tokenUtils;
+
+    @Autowired
+    private ClassTestUtils classUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
 
 
     @Test
     public void getAllClasses() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -73,13 +85,13 @@ public class ClassControllerIntegrationTest {
     }
 
     private void getAllClasses(UserEntity userEntity) throws Exception {
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
-        ClassEntity anotherClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ClassEntity anotherClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
 
-        OrganizationEntity anptherOrganization = testUtils.saveOrganization();
-        ClassEntity classFromAnotherOrganization = testUtils.saveAClassInOrganization(anptherOrganization);
+        OrganizationEntity anptherOrganization = organizationUtils.saveOrganization();
+        ClassEntity classFromAnotherOrganization = classUtils.saveAClassInOrganization(anptherOrganization);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get(CLASS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
@@ -95,9 +107,9 @@ public class ClassControllerIntegrationTest {
     public void getAllClasses_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -110,7 +122,7 @@ public class ClassControllerIntegrationTest {
 
     private void getAllClasses_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get(CLASS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
@@ -124,13 +136,13 @@ public class ClassControllerIntegrationTest {
     public void getClassById() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -142,9 +154,9 @@ public class ClassControllerIntegrationTest {
     }
 
     private void getClassById(UserEntity userEntity) throws Exception {
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get(CLASS_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
@@ -158,13 +170,13 @@ public class ClassControllerIntegrationTest {
     public void getClassById_shouldFailWhenIsAWrongOrganization() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -176,10 +188,10 @@ public class ClassControllerIntegrationTest {
     }
 
     private void getClassById_shouldFailWhenIsAWrongOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        ClassEntity aClass = testUtils.saveAClassInOrganization(organizationEntity);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        ClassEntity aClass = classUtils.saveAClassInOrganization(organizationEntity);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get(CLASS_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
@@ -193,9 +205,9 @@ public class ClassControllerIntegrationTest {
     public void getClassById_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -207,9 +219,9 @@ public class ClassControllerIntegrationTest {
     }
 
     private void getClassById_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get(CLASS_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
@@ -223,11 +235,11 @@ public class ClassControllerIntegrationTest {
     @Test
     public void addClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -240,7 +252,7 @@ public class ClassControllerIntegrationTest {
     }
 
     private void addClass(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -268,11 +280,11 @@ public class ClassControllerIntegrationTest {
     public void addClass_shouldFailForWrongRole() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -285,7 +297,7 @@ public class ClassControllerIntegrationTest {
     }
 
     private void addClass_shouldFailForWrongRole(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -307,13 +319,13 @@ public class ClassControllerIntegrationTest {
     @Test
     public void updateClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
-        ClassEntity aClass = testUtils.saveAClassInOrganization(organizationEntity);
+        ClassEntity aClass = classUtils.saveAClassInOrganization(organizationEntity);
 
         try {
             // Test adding an organization when called by different users.
@@ -326,8 +338,8 @@ public class ClassControllerIntegrationTest {
     }
 
     private void updateClass(UserEntity userEntity, Integer classId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity aTeacher = testUtils.saveATeacherInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity aTeacher = userUtils.saveATeacherInOrganization(userEntity.getOrganization());
         ArrayList<Integer> teacherIds = new ArrayList<>();
         teacherIds.add(aTeacher.getId());
 
@@ -362,13 +374,13 @@ public class ClassControllerIntegrationTest {
     @Test
     public void updateClass_shouldFailWhenUpdatingWithTeacherFromAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
-        ClassEntity aClass = testUtils.saveAClassInOrganization(organizationEntity);
+        ClassEntity aClass = classUtils.saveAClassInOrganization(organizationEntity);
 
         try {
             // Test adding an organization when called by different users.
@@ -381,9 +393,9 @@ public class ClassControllerIntegrationTest {
     }
 
     private void updateClass_shouldFailWhenUpdatingWithTeacherFromAnotherOrganization(UserEntity userEntity, Integer classId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        OrganizationEntity anOrganization = testUtils.saveOrganization();
-        UserEntity aTeacher = testUtils.saveATeacherInOrganization(anOrganization);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity anOrganization = organizationUtils.saveOrganization();
+        UserEntity aTeacher = userUtils.saveATeacherInOrganization(anOrganization);
         ArrayList<Integer> teacherIds = new ArrayList<>();
         teacherIds.add(aTeacher.getId());
 
@@ -406,13 +418,13 @@ public class ClassControllerIntegrationTest {
     @Test
     public void updateClass_shouldFailForNotAllowedUsers() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
-        ClassEntity aClass = testUtils.saveAClassInOrganization(organizationEntity);
+        ClassEntity aClass = classUtils.saveAClassInOrganization(organizationEntity);
 
         try {
             // Test adding an organization when called by different users.
@@ -425,8 +437,8 @@ public class ClassControllerIntegrationTest {
     }
 
     private void updateClass_shouldFailForNotAllowedUsers(UserEntity userEntity, Integer classId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity aTeacher = testUtils.saveATeacherInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity aTeacher = userUtils.saveATeacherInOrganization(userEntity.getOrganization());
         ArrayList<Integer> teacherIds = new ArrayList<>();
         teacherIds.add(aTeacher.getId());
 
@@ -449,11 +461,11 @@ public class ClassControllerIntegrationTest {
     @Test
     public void deleteClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -466,8 +478,8 @@ public class ClassControllerIntegrationTest {
     }
 
     private void deleteClass(UserEntity userEntity) throws Exception {
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())
@@ -483,11 +495,11 @@ public class ClassControllerIntegrationTest {
     @Test
     public void deleteClass_shouldFailForWrongRole() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -500,8 +512,8 @@ public class ClassControllerIntegrationTest {
     }
 
     private void deleteClass_shouldFailForWrongRole(UserEntity userEntity) throws Exception {
-        ClassEntity aClass = testUtils.saveAClassInOrganization(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ClassEntity aClass = classUtils.saveAClassInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())
@@ -519,11 +531,11 @@ public class ClassControllerIntegrationTest {
     @Test
     public void deleteClass_shouldFailWhenDeletingClassFromAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -536,9 +548,9 @@ public class ClassControllerIntegrationTest {
     }
 
     private void deleteClass_shouldFailWhenDeletingClassFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        ClassEntity aClass = testUtils.saveAClassInOrganization(organizationEntity);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        ClassEntity aClass = classUtils.saveAClassInOrganization(organizationEntity);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())

@@ -1,6 +1,6 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.*;
 import com.edusphere.entities.*;
 import com.edusphere.exceptions.payments.PaymentNotFoundException;
 import com.edusphere.repositories.PaymentRepository;
@@ -21,8 +21,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -39,21 +39,37 @@ public class PaymentControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private TestUtils testUtils;
 
     @Autowired
     private PaymentRepository paymentRepository;
+    
+    @Autowired
+    private OrganizationTestUtils organizationUtils;
+    
+    @Autowired
+    private RoleTestUtils roleUtils;
+    
+    @Autowired
+    private UserTestUtils userUtils;
+    
+    @Autowired
+    private PaymentTestUtils paymentUtils;
+    
+    @Autowired
+    private TokenTestUtils tokenUtils;
+    
+    @Autowired
+    private ChildTestUtils childUtils;
 
     @Test
     public void getChildPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -65,18 +81,18 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void getChildPayments(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
-        PaymentEntity secondPayment = testUtils.savePaymentForChildOnMonth(paymentEntity.getChild(),
+        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
+        PaymentEntity secondPayment = paymentUtils.savePaymentForChildOnMonth(paymentEntity.getChild(),
                 paymentEntity.getIssueDate());
-        PaymentEntity paymentForAnotherChild = testUtils.savePayment(userEntity.getOrganization());
+        PaymentEntity paymentForAnotherChild = paymentUtils.savePayment(userEntity.getOrganization());
 
         LocalDate currentDate = LocalDate.now();
         LocalDate previousMonth = currentDate.minusMonths(1);
 
-        PaymentEntity paymentEntityFromPreviousMonth = testUtils.savePaymentForChildOnMonth(
+        PaymentEntity paymentEntityFromPreviousMonth = paymentUtils.savePaymentForChildOnMonth(
                 paymentEntity.getChild(), previousMonth);
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
@@ -97,9 +113,9 @@ public class PaymentControllerIntegrationTest {
     public void getChildPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -111,10 +127,10 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void getChildPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
+        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
 
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         LocalDate currentDate = LocalDate.now();
@@ -135,13 +151,13 @@ public class PaymentControllerIntegrationTest {
     public void getParentPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -153,21 +169,21 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void getParentPayments(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
-        ChildEntity anotherChild = testUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), paymentEntity.getChild().getParent());
-        PaymentEntity PaymentForSecondChild = testUtils.savePaymentForChildOnMonth(anotherChild, paymentEntity.getIssueDate());
+        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
+        ChildEntity anotherChild = childUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), paymentEntity.getChild().getParent());
+        PaymentEntity PaymentForSecondChild = paymentUtils.savePaymentForChildOnMonth(anotherChild, paymentEntity.getIssueDate());
 
         LocalDate currentDate = LocalDate.now();
         LocalDate previousMonth = currentDate.minusMonths(1);
 
-        PaymentEntity PaymentEntityFromPreviousMonth = testUtils.savePaymentForChildOnMonth(
+        PaymentEntity PaymentEntityFromPreviousMonth = paymentUtils.savePaymentForChildOnMonth(
                 paymentEntity.getChild(), previousMonth);
 
-        UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ChildEntity childForAnotherParent = testUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), aParent);
-        PaymentEntity paymentForAnotherParent = testUtils.savePaymentForChildOnMonth(childForAnotherParent, paymentEntity.getIssueDate());
+        UserEntity aParent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
+        ChildEntity childForAnotherParent = childUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), aParent);
+        PaymentEntity paymentForAnotherParent = paymentUtils.savePaymentForChildOnMonth(childForAnotherParent, paymentEntity.getIssueDate());
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
@@ -189,9 +205,9 @@ public class PaymentControllerIntegrationTest {
     public void getParentPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity parentRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -203,11 +219,11 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void getParentPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
+        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
 
         LocalDate currentDate = LocalDate.now();
 
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
@@ -224,11 +240,11 @@ public class PaymentControllerIntegrationTest {
     @Test
     public void markPaymentAsPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -241,8 +257,8 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void markPaymentAsPaid(UserEntity userEntity) throws Exception {
-        PaymentEntity aPayment = testUtils.savePayment(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        PaymentEntity aPayment = paymentUtils.savePayment(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -267,11 +283,11 @@ public class PaymentControllerIntegrationTest {
     @Test
     public void markPaymentAsUnpaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -284,8 +300,8 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void markPaymentAsUnpaid(UserEntity userEntity) throws Exception {
-        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        PaymentEntity aPayment = paymentUtils.saveAPaidPayment(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -310,11 +326,11 @@ public class PaymentControllerIntegrationTest {
     @Test
     public void markPaymentAsPaid_shouldFailIfAlreadyPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -326,8 +342,8 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void markPaymentAsPaid_shouldFailIfAlreadyPaid(UserEntity userEntity) throws Exception {
-        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        PaymentEntity aPayment = paymentUtils.saveAPaidPayment(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -351,11 +367,11 @@ public class PaymentControllerIntegrationTest {
     @Test
     public void markPayment_shouldFailForNotAllowedRoles() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -367,8 +383,8 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void markPayment_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        PaymentEntity aPayment = paymentUtils.saveAPaidPayment(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
@@ -392,11 +408,11 @@ public class PaymentControllerIntegrationTest {
     @Test
     public void markPayment_shouldFailForAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
 
         try {
             // Test adding an organization when called by different users.
@@ -409,9 +425,9 @@ public class PaymentControllerIntegrationTest {
     }
 
     private void markPayment_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anOrganization = testUtils.saveOrganization();
-        PaymentEntity aPayment = testUtils.savePayment(anOrganization);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity anOrganization = organizationUtils.saveOrganization();
+        PaymentEntity aPayment = paymentUtils.savePayment(anOrganization);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();

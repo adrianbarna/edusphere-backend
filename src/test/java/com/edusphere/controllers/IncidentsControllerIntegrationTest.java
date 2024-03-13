@@ -1,6 +1,6 @@
 package com.edusphere.controllers;
 
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.*;
 import com.edusphere.entities.*;
 import com.edusphere.exceptions.IncidentNotFoundException;
 import com.edusphere.repositories.IncidentRepository;
@@ -23,11 +23,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -46,22 +47,37 @@ public class IncidentsControllerIntegrationTest {
     private IncidentRepository incidentRepository;
 
     @Autowired
-    private TestUtils testUtils;
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private TokenTestUtils tokenUtils;
+
+    @Autowired
+    private IncidentTestUtils incidentUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
+
+    @Autowired
+    private ChildTestUtils childUtils;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
     public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization();
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), "123456", organizationEntity, parentRole));
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), "123456", organizationEntity, parentRole));
     }
 
     @Test
@@ -76,13 +92,13 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void getAllIncidents(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        IncidentEntity incidentEntity = testUtils.saveIncident(userEntity.getOrganization());
-        IncidentEntity anotherIncidentEntity = testUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
+        IncidentEntity anotherIncidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
 
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
         IncidentEntity incidentInAnotherORganization
-                = testUtils.saveIncident(anotherOrganization);
+                = incidentUtils.saveIncident(anotherOrganization);
 
 
         mockMvc.perform(MockMvcRequestBuilders.get(INCIDENTS_ENDPOINT)
@@ -107,8 +123,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void getAllIncidents_shouldFailForWrongRole(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        testUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        incidentUtils.saveIncident(userEntity.getOrganization());
 
         mockMvc.perform(MockMvcRequestBuilders.get(INCIDENTS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
@@ -130,8 +146,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void getIncidentById(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        IncidentEntity incidentEntity = testUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
 
         mockMvc.perform(MockMvcRequestBuilders.get(INCIDENTS_ENDPOINT + "/" + incidentEntity.getId())
                         .header("Authorization", "Bearer " + token)
@@ -139,7 +155,6 @@ public class IncidentsControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.summary").value(incidentEntity.getSummary()));
-        ;
     }
 
     @Test
@@ -154,11 +169,11 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void getIncidentById_shoulfFailIfFromAnotherOrganization(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
         IncidentEntity incidentInAnotherORganization
-                = testUtils.saveIncident(anotherOrganization);
+                = incidentUtils.saveIncident(anotherOrganization);
 
 
         mockMvc.perform(MockMvcRequestBuilders.get(INCIDENTS_ENDPOINT + "/" + incidentInAnotherORganization.getId())
@@ -181,8 +196,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void getIncidentById_shoulfFailForWrongRole(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        IncidentEntity incidentEntity = testUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
 
         mockMvc.perform(MockMvcRequestBuilders.get(INCIDENTS_ENDPOINT + "/" + incidentEntity.getId())
                         .header("Authorization", "Bearer " + token)
@@ -204,8 +219,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void createIncident(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        ChildEntity aChildInOrganization = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        ChildEntity aChildInOrganization = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         IncidentVO incidentVO = IncidentVO.builder()
                 .childId(aChildInOrganization.getId())
                 .summary(generateRandomString())
@@ -247,8 +262,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void createIncident_shouldFailForWrongRole(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        ChildEntity aChildInOrganization = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        ChildEntity aChildInOrganization = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         IncidentVO incidentVO = IncidentVO.builder()
                 .childId(aChildInOrganization.getId())
                 .summary(generateRandomString())
@@ -268,7 +283,7 @@ public class IncidentsControllerIntegrationTest {
     public void updateIncident() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                IncidentEntity incidentEntity = testUtils.saveIncident(allowedUser.getOrganization());
+                IncidentEntity incidentEntity = incidentUtils.saveIncident(allowedUser.getOrganization());
                 updateIncident(allowedUser, incidentEntity.getId());
             }
         } catch (Exception e) {
@@ -277,8 +292,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void updateIncident(UserEntity userEntity, Integer incidentId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        ChildEntity aChildInOrganization = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        ChildEntity aChildInOrganization = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         IncidentVO incidentVO = IncidentVO.builder()
                 .childId(aChildInOrganization.getId())
                 .summary(generateRandomString())
@@ -312,7 +327,7 @@ public class IncidentsControllerIntegrationTest {
     public void updateIncident_shouldFailWhenUpdatingFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                IncidentEntity incidentEntity = testUtils.saveIncident(allowedUser.getOrganization());
+                IncidentEntity incidentEntity = incidentUtils.saveIncident(allowedUser.getOrganization());
                 updateIncident_shouldFailWhenUpdatingFromAnotherOrganization(allowedUser, incidentEntity.getId());
             }
         } catch (Exception e) {
@@ -321,9 +336,9 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void updateIncident_shouldFailWhenUpdatingFromAnotherOrganization(UserEntity userEntity, Integer incidentId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), "123456");
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        ChildEntity aChildInAnotherOrganization = testUtils.saveAChildInOrganization(anotherOrganization);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        ChildEntity aChildInAnotherOrganization = childUtils.saveAChildInOrganization(anotherOrganization);
         IncidentVO incidentVO = IncidentVO.builder()
                 .childId(aChildInAnotherOrganization.getId())
                 .summary(generateRandomString())
@@ -344,7 +359,7 @@ public class IncidentsControllerIntegrationTest {
     public void updateIncident_shouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
-                IncidentEntity incidentEntity = testUtils.saveIncident(notAllowedUser.getOrganization());
+                IncidentEntity incidentEntity = incidentUtils.saveIncident(notAllowedUser.getOrganization());
                 updateIncident_shouldFailForNotAllowedUsers(notAllowedUser, incidentEntity.getId());
             }
         } catch (Exception e) {
@@ -353,8 +368,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void updateIncident_shouldFailForNotAllowedUsers(UserEntity userEntity, Integer incidentId) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        ChildEntity aChildInAnotherOrganization = testUtils.saveAChildInOrganization(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        ChildEntity aChildInAnotherOrganization = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         IncidentVO incidentVO = IncidentVO.builder()
                 .childId(aChildInAnotherOrganization.getId())
                 .summary(generateRandomString())
@@ -384,8 +399,8 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void deleteIncident(UserEntity userEntity) throws Exception {
-        IncidentEntity incidentEntity = testUtils.saveIncident(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.delete(INCIDENTS_ENDPOINT+"/"+incidentEntity.getId())
@@ -410,15 +425,15 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void deleteIncident_shouldFailForWrongRole(UserEntity userEntity) throws Exception {
-        IncidentEntity incidentEntity = testUtils.saveIncident(userEntity.getOrganization());
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.delete(INCIDENTS_ENDPOINT+"/"+incidentEntity.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
-                .andExpect(jsonPath("$.error").value("Access Denied"));;
+                .andExpect(jsonPath("$.error").value("Access Denied"));
 
         assertThat(incidentRepository.findById(incidentEntity.getId()).isEmpty()).isFalse();
     }
@@ -436,9 +451,9 @@ public class IncidentsControllerIntegrationTest {
     }
 
     private void deleteIncident_shouldFailWhenDeletingFromWrongOrganization(UserEntity userEntity) throws Exception {
-        OrganizationEntity anotherOrganization = testUtils.saveOrganization();
-        IncidentEntity incidentEntity = testUtils.saveIncident(anotherOrganization);
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        OrganizationEntity anotherOrganization = organizationUtils.saveOrganization();
+        IncidentEntity incidentEntity = incidentUtils.saveIncident(anotherOrganization);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
         mockMvc.perform(MockMvcRequestBuilders.delete(INCIDENTS_ENDPOINT+"/"+incidentEntity.getId())
@@ -446,7 +461,7 @@ public class IncidentsControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Id-ul incidentului "+incidentEntity.getId()+" este invalid"))
-                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));;
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));
 
 
 // Assert true if it does not exist
