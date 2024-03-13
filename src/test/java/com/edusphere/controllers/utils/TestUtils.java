@@ -40,7 +40,7 @@ public class TestUtils {
     private IncidentRepository incidentRepository;
 
     @Autowired
-    private InvoiceRepository invoiceRepository;
+    private PaymentRepository paymentRepository;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -141,42 +141,42 @@ public class TestUtils {
         return childRepository.save(childEntity);
     }
 
-    public InvoiceEntity saveInvoice(OrganizationEntity organizationEntity){
-        InvoiceEntity invoiceEntity = new InvoiceEntity();
+    public PaymentEntity savePayment(OrganizationEntity organizationEntity){
+        PaymentEntity paymentEntity = new PaymentEntity();
         ChildEntity childEntity = saveAChildInOrganization(organizationEntity);
-        invoiceEntity.setChild(childEntity);
-        invoiceEntity.setAmount(1000);
-        invoiceEntity.setDueDate(LocalDate.now());
-        invoiceEntity.setIssueDate(LocalDate.now());
-        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
+        paymentEntity.setChild(childEntity);
+        paymentEntity.setAmount(1000);
+        paymentEntity.setDueDate(LocalDate.now());
+        paymentEntity.setIssueDate(LocalDate.now());
+        paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
 
-        return invoiceRepository.save(invoiceEntity);
+        return paymentRepository.save(paymentEntity);
     }
 
-    public InvoiceEntity saveAPaidInvoice(OrganizationEntity organizationEntity){
-        InvoiceEntity invoiceEntity = new InvoiceEntity();
+    public PaymentEntity saveAPaidPayment(OrganizationEntity organizationEntity){
+        PaymentEntity paymentEntity = new PaymentEntity();
         ChildEntity childEntity = saveAChildInOrganization(organizationEntity);
-        invoiceEntity.setChild(childEntity);
-        invoiceEntity.setAmount(1000);
-        invoiceEntity.setDueDate(LocalDate.now());
-        invoiceEntity.setIssueDate(LocalDate.now());
-        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
-        invoiceEntity.setIsPaid(true);
+        paymentEntity.setChild(childEntity);
+        paymentEntity.setAmount(1000);
+        paymentEntity.setDueDate(LocalDate.now());
+        paymentEntity.setIssueDate(LocalDate.now());
+        paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
+        paymentEntity.setIsPaid(true);
 
-        return invoiceRepository.save(invoiceEntity);
+        return paymentRepository.save(paymentEntity);
     }
 
 
-    public InvoiceEntity saveInvoiceForChildOnMonth(ChildEntity childEntity,
+    public PaymentEntity savePaymentForChildOnMonth(ChildEntity childEntity,
                                                     LocalDate month){
-        InvoiceEntity invoiceEntity = new InvoiceEntity();
-        invoiceEntity.setChild(childEntity);
-        invoiceEntity.setAmount(1000);
-        invoiceEntity.setDueDate(month);
-        invoiceEntity.setIssueDate(month);
-        invoiceEntity.setPayType(PaymentTypeEnum.TRANSFER);
+        PaymentEntity paymentEntity = new PaymentEntity();
+        paymentEntity.setChild(childEntity);
+        paymentEntity.setAmount(1000);
+        paymentEntity.setDueDate(month);
+        paymentEntity.setIssueDate(month);
+        paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
 
-        return invoiceRepository.save(invoiceEntity);
+        return paymentRepository.save(paymentEntity);
     }
 
     public ChildEntity saveAChildInAnotherOrganization(){

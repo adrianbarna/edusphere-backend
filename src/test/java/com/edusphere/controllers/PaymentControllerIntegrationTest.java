@@ -2,8 +2,8 @@ package com.edusphere.controllers;
 
 import com.edusphere.controllers.utils.TestUtils;
 import com.edusphere.entities.*;
-import com.edusphere.exceptions.invoices.InvoiceNotFoundException;
-import com.edusphere.repositories.InvoiceRepository;
+import com.edusphere.exceptions.payments.PaymentNotFoundException;
+import com.edusphere.repositories.PaymentRepository;
 import com.edusphere.vos.ClassVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -34,9 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class InvoiceControllerIntegrationTest {
+public class PaymentControllerIntegrationTest {
     public static final String PASSWORD = "123456";
-    public static final String INVOICE_ENDPOINT = "/invoice";
+    public static final String PAYMENT_ENDPOINT = "/payment";
     @Autowired
     private MockMvc mockMvc;
 
@@ -44,10 +44,10 @@ public class InvoiceControllerIntegrationTest {
     private TestUtils testUtils;
 
     @Autowired
-    private InvoiceRepository invoiceRepository;
+    private PaymentRepository paymentRepository;
 
     @Test
-    public void getChildInvoices() {
+    public void getChildPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
@@ -58,44 +58,44 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                getChildInvoices(allowedUser);
+                getChildPayments(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void getChildInvoices(UserEntity userEntity) throws Exception {
-        InvoiceEntity invoiceEntity = testUtils.saveInvoice(userEntity.getOrganization());
-        InvoiceEntity secondInvoice = testUtils.saveInvoiceForChildOnMonth(invoiceEntity.getChild(),
-                invoiceEntity.getIssueDate());
-        InvoiceEntity invoiceForAnotherChild = testUtils.saveInvoice(userEntity.getOrganization());
+    private void getChildPayments(UserEntity userEntity) throws Exception {
+        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
+        PaymentEntity secondPayment = testUtils.savePaymentForChildOnMonth(paymentEntity.getChild(),
+                paymentEntity.getIssueDate());
+        PaymentEntity paymentForAnotherChild = testUtils.savePayment(userEntity.getOrganization());
 
         LocalDate currentDate = LocalDate.now();
         LocalDate previousMonth = currentDate.minusMonths(1);
 
-        InvoiceEntity invoiceEntityFromPreviousMonth = testUtils.saveInvoiceForChildOnMonth(
-                invoiceEntity.getChild(), previousMonth);
+        PaymentEntity paymentEntityFromPreviousMonth = testUtils.savePaymentForChildOnMonth(
+                paymentEntity.getChild(), previousMonth);
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
 
-        mockMvc.perform(MockMvcRequestBuilders.get(INVOICE_ENDPOINT + "/child/" + invoiceEntity.getChild().getId() +
+        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/child/" + paymentEntity.getChild().getId() +
                                 "?month=" + formattedDate)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.[*].id", hasItem(invoiceEntity.getId())))
-                .andExpect(jsonPath("$.[*].id", hasItem(secondInvoice.getId())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceEntity.getAmount())))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceEntityFromPreviousMonth.getId()))))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceForAnotherChild.getId()))));
+                .andExpect(jsonPath("$.[*].id", hasItem(paymentEntity.getId())))
+                .andExpect(jsonPath("$.[*].id", hasItem(secondPayment.getId())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(paymentEntity.getAmount())))
+                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentEntityFromPreviousMonth.getId()))))
+                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentForAnotherChild.getId()))));
     }
 
     @Test
-    public void getChildInvoices_shouldFailForNotAllowedRoles() {
+    public void getChildPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
@@ -104,15 +104,15 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                getChildInvoices_shouldFailForNotAllowedRoles(allowedUser);
+                getChildPayments_shouldFailForNotAllowedRoles(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void getChildInvoices_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        InvoiceEntity invoiceEntity = testUtils.saveInvoice(userEntity.getOrganization());
+    private void getChildPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
 
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
@@ -121,7 +121,7 @@ public class InvoiceControllerIntegrationTest {
         LocalDate currentDate = LocalDate.now();
         String formattedDate = currentDate.format(formatter);
 
-        mockMvc.perform(MockMvcRequestBuilders.get(INVOICE_ENDPOINT + "/child/" + invoiceEntity.getChild().getId() +
+        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/child/" + paymentEntity.getChild().getId() +
                                 "?month=" + formattedDate)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -133,7 +133,7 @@ public class InvoiceControllerIntegrationTest {
 
     @Test
     //TODO cover the cases when child has skipDays
-    public void getParentInvoices() {
+    public void getParentPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
@@ -146,48 +146,48 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                getParentInvoices(allowedUser);
+                getParentPayments(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void getParentInvoices(UserEntity userEntity) throws Exception {
-        InvoiceEntity invoiceEntity = testUtils.saveInvoice(userEntity.getOrganization());
-        ChildEntity anotherChild = testUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), invoiceEntity.getChild().getParent());
-        InvoiceEntity invoiceForSecondChild = testUtils.saveInvoiceForChildOnMonth(anotherChild, invoiceEntity.getIssueDate());
+    private void getParentPayments(UserEntity userEntity) throws Exception {
+        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
+        ChildEntity anotherChild = testUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), paymentEntity.getChild().getParent());
+        PaymentEntity PaymentForSecondChild = testUtils.savePaymentForChildOnMonth(anotherChild, paymentEntity.getIssueDate());
 
         LocalDate currentDate = LocalDate.now();
         LocalDate previousMonth = currentDate.minusMonths(1);
 
-        InvoiceEntity invoiceEntityFromPreviousMonth = testUtils.saveInvoiceForChildOnMonth(
-                invoiceEntity.getChild(), previousMonth);
+        PaymentEntity PaymentEntityFromPreviousMonth = testUtils.savePaymentForChildOnMonth(
+                paymentEntity.getChild(), previousMonth);
 
         UserEntity aParent = testUtils.saveAParentInOrganization(userEntity.getOrganization());
         ChildEntity childForAnotherParent = testUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), aParent);
-        InvoiceEntity invoiceForAnotherParent = testUtils.saveInvoiceForChildOnMonth(childForAnotherParent, invoiceEntity.getIssueDate());
+        PaymentEntity paymentForAnotherParent = testUtils.savePaymentForChildOnMonth(childForAnotherParent, paymentEntity.getIssueDate());
 
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
 
-        mockMvc.perform(MockMvcRequestBuilders.get(INVOICE_ENDPOINT + "/parent/" + invoiceEntity.getChild().getParent().getId() +
+        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/parent/" + paymentEntity.getChild().getParent().getId() +
                                 "?month=" + formattedDate)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.[*].id", hasItem(invoiceEntity.getId())))
-                .andExpect(jsonPath("$.[*].id", hasItem(invoiceForSecondChild.getId())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceEntity.getAmount())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(invoiceForSecondChild.getAmount())))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceEntityFromPreviousMonth.getId()))))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(invoiceForAnotherParent.getId()))));
+                .andExpect(jsonPath("$.[*].id", hasItem(paymentEntity.getId())))
+                .andExpect(jsonPath("$.[*].id", hasItem(PaymentForSecondChild.getId())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(paymentEntity.getAmount())))
+                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(PaymentForSecondChild.getAmount())))
+                .andExpect(jsonPath("$.[*].id", not(hasItem(PaymentEntityFromPreviousMonth.getId()))))
+                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentForAnotherParent.getId()))));
     }
 
     @Test
-    public void getParentInvoices_shouldFailForNotAllowedRoles() {
+    public void getParentPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
@@ -196,15 +196,15 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                getParentInvoices_shouldFailForNotAllowedRoles(allowedUser);
+                getParentPayments_shouldFailForNotAllowedRoles(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void getParentInvoices_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        InvoiceEntity invoiceEntity = testUtils.saveInvoice(userEntity.getOrganization());
+    private void getParentPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+        PaymentEntity paymentEntity = testUtils.savePayment(userEntity.getOrganization());
 
         LocalDate currentDate = LocalDate.now();
 
@@ -213,7 +213,7 @@ public class InvoiceControllerIntegrationTest {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
         String formattedDate = currentDate.format(formatter);
 
-        mockMvc.perform(MockMvcRequestBuilders.get(INVOICE_ENDPOINT + "/parent/" + invoiceEntity.getChild().getParent().getId() +
+        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/parent/" + paymentEntity.getChild().getParent().getId() +
                                 "?month=" + formattedDate)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -223,7 +223,7 @@ public class InvoiceControllerIntegrationTest {
     }
 
     @Test
-    public void markInvoiceAsPaid() {
+    public void markPaymentAsPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -234,23 +234,23 @@ public class InvoiceControllerIntegrationTest {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                markInvoiceAsPaid(allowedUser);
+                markPaymentAsPaid(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markInvoiceAsPaid(UserEntity userEntity) throws Exception {
-        InvoiceEntity anInvoice = testUtils.saveInvoice(userEntity.getOrganization());
+    private void markPaymentAsPaid(UserEntity userEntity) throws Exception {
+        PaymentEntity aPayment = testUtils.savePayment(userEntity.getOrganization());
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
-                                + anInvoice.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
+                                + aPayment.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -259,14 +259,14 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.isPaid").value("true"));
 
-        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
-                new InvoiceNotFoundException(anInvoice.getId()));
+        PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
+                new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(invoiceEntity.getIsPaid());
+        assertTrue(PaymentEntity.getIsPaid());
     }
 
     @Test
-    public void markInvoiceAsPaid_shouldFailIfAlreadyPaid() {
+    public void markPaymentAsPaid_shouldFailIfAlreadyPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -276,38 +276,38 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                markInvoiceAsPaid_shouldFailIfAlreadyPaid(allowedUser);
+                markPaymentAsPaid_shouldFailIfAlreadyPaid(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markInvoiceAsPaid_shouldFailIfAlreadyPaid(UserEntity userEntity) throws Exception {
-        InvoiceEntity anInvoice = testUtils.saveAPaidInvoice(userEntity.getOrganization());
+    private void markPaymentAsPaid_shouldFailIfAlreadyPaid(UserEntity userEntity) throws Exception {
+        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
-                                + anInvoice.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
+                                + aPayment.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + anInvoice.getId() + " este deja platita."))
+                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + aPayment.getId() + " este deja platita."))
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));
 
-        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
-                new InvoiceNotFoundException(anInvoice.getId()));
+        PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
+                new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(invoiceEntity.getIsPaid());
+        assertTrue(PaymentEntity.getIsPaid());
     }
 
     @Test
-    public void markInvoiceAsPaid_shouldFailForNotAllowedRoles() {
+    public void markPaymentAsPaid_shouldFailForNotAllowedRoles() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
@@ -317,23 +317,23 @@ public class InvoiceControllerIntegrationTest {
 
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                markInvoiceAsPaid_shouldFailForNotAllowedRoles(allowedUser);
+                markPaymentAsPaid_shouldFailForNotAllowedRoles(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markInvoiceAsPaid_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        InvoiceEntity anInvoice = testUtils.saveAPaidInvoice(userEntity.getOrganization());
+    private void markPaymentAsPaid_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
+        PaymentEntity aPayment = testUtils.saveAPaidPayment(userEntity.getOrganization());
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
-                                + anInvoice.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
+                                + aPayment.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -341,14 +341,14 @@ public class InvoiceControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
                 .andExpect(jsonPath("$.error").value("Access Denied"));
 
-        InvoiceEntity invoiceEntity = invoiceRepository.findById(anInvoice.getId()).orElseThrow(() ->
-                new InvoiceNotFoundException(anInvoice.getId()));
+        PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
+                new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(invoiceEntity.getIsPaid());
+        assertTrue(PaymentEntity.getIsPaid());
     }
 
     @Test
-    public void markInvoiceAsPaid_shouldFailForAnotherOrganization() {
+    public void markPaymentAsPaid_shouldFailForAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = testUtils.saveOrganization();
         RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -359,29 +359,29 @@ public class InvoiceControllerIntegrationTest {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                markInvoiceAsPaid_shouldFailForAnotherOrganization(allowedUser);
+                markPaymentAsPaid_shouldFailForAnotherOrganization(allowedUser);
             }
         } catch (Exception e) {
             fail("Test failed due to an exception: " + e.getMessage());
         }
     }
 
-    private void markInvoiceAsPaid_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
+    private void markPaymentAsPaid_shouldFailForAnotherOrganization(UserEntity userEntity) throws Exception {
         OrganizationEntity anOrganization = testUtils.saveOrganization();
-        InvoiceEntity anInvoice = testUtils.saveInvoice(anOrganization);
+        PaymentEntity aPayment = testUtils.savePayment(anOrganization);
         String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         ClassVO classVO = ClassVO.builder()
                 .name(generateRandomString())
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put(INVOICE_ENDPOINT + "/markAsPaid/"
-                                + anInvoice.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(PAYMENT_ENDPOINT + "/markAsPaid/"
+                                + aPayment.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + anInvoice.getId() + " este invalida."))
+                .andExpect(jsonPath("$.message").value("Factura cu id-ul " + aPayment.getId() + " este invalida."))
                 .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"));
 
     }

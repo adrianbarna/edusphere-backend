@@ -52,7 +52,7 @@ public class ChildEntity {
     private Set<MessageEntity> messages = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "child")
-    private Set<InvoiceEntity> payments = new LinkedHashSet<>();
+    private Set<PaymentEntity> payments = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "child")
     private Set<ReportEntity> reports = new LinkedHashSet<>();

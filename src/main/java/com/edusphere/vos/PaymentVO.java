@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class InvoiceVO {
+public class PaymentVO {
     private Integer id;
     private ChildVO childVO;
     private Integer amountWithoutSkipDays;

@@ -2,9 +2,9 @@ package com.edusphere.controllers;
 
 import com.edusphere.authorizationAnnotations.OwnerOrAdminOrParentPermission;
 import com.edusphere.authorizationAnnotations.OwnerOrAdminPermission;
-import com.edusphere.services.InvoiceService;
+import com.edusphere.services.PaymentService;
 import com.edusphere.utils.AuthenticatedUserUtil;
-import com.edusphere.vos.InvoiceVO;
+import com.edusphere.vos.PaymentVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,68 +16,68 @@ import java.time.YearMonth;
 import java.util.List;
 
 @RestController
-@RequestMapping("/invoice")
+@RequestMapping("/payment")
 @Tag(name = "User Controller", description = "APIs for managing users")
 @SecurityRequirement(name = "Bearer Authentication")
 @OwnerOrAdminPermission
-public class InvoiceController {
+public class PaymentController {
 
-    private final InvoiceService invoiceService;
+    private final PaymentService paymentService;
     private final AuthenticatedUserUtil authenticatedUserUtil;
 
-    public InvoiceController(InvoiceService invoiceService, AuthenticatedUserUtil authenticatedUserUtil) {
-        this.invoiceService = invoiceService;
+    public PaymentController(PaymentService paymentService, AuthenticatedUserUtil authenticatedUserUtil) {
+        this.paymentService = paymentService;
         this.authenticatedUserUtil = authenticatedUserUtil;
     }
 
     @GetMapping
     @Operation(summary = "Save invoice from organization", description = "Get all users from organization")
     public void saveInvoiceFile() {
-        invoiceService.saveInvoiceToFile("./invoice.pdf");
+        paymentService.saveInvoiceToFile("./invoice.pdf");
     }
 
 
-    @Operation(summary = "Get invoices by month for child", description = "Retrieve a list of invoices by month" +
+    @Operation(summary = "Get payments by month for child", description = "Retrieve a list of payments by month" +
             "for child")
     @GetMapping("/child/{id}")
     @OwnerOrAdminPermission
-    public List<InvoiceVO> getChildInvoicesByMonth(
+    public List<PaymentVO> getChildPaymentsByMonth(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer childId,
-            @Parameter(description = "Month of the invoices to retrieve in YYYY-MM format")
+            @Parameter(description = "Month of the payments to retrieve in YYYY-MM format")
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
         if (month == null) {
             throw new IllegalArgumentException("Month must not be null");
         }
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
 
-        return invoiceService.getChildInvoicesByMonth(childId, month, organizationId);
+        return paymentService.getChildPaymentsByMonth(childId, month, organizationId);
     }
 
-    @Operation(summary = "Get invoices by month for parent",
-            description = "Retrieve a list of invoices by month for parent")
+    @Operation(summary = "Get payments by month for parent",
+            description = "Retrieve a list of payments by month for parent")
     @GetMapping("/parent/{id}")
     @OwnerOrAdminOrParentPermission
-    public List<InvoiceVO> getParentInvoicesByMonth(
+    public List<PaymentVO> getParentPaymentsByMonth(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer childId,
-            @Parameter(description = "Month of the invoices to retrieve in YYYY-MM format")
+            @Parameter(description = "Month of the payments to retrieve in YYYY-MM format")
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
         if (month == null) {
             throw new IllegalArgumentException("Month must not be null");
         }
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
 
-        return invoiceService.getParentInvoicesByMonth(childId, month, organizationId);
+        return paymentService.getParentPaymentsByMonth(childId, month, organizationId);
     }
 
-    @Operation(summary = "Mark invoice as paid",
-            description = "Mark invoice as paid")
+    @Operation(summary = "Mark payment as paid",
+            description = "Mark payment as paid")
     @PutMapping("/markAsPaid/{id}")
     @OwnerOrAdminPermission
-    //TODO add unmarkInvoiceAsPaid method
-    public InvoiceVO markInvoiceAsPaid(
-            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer invoiceId) {
+    //TODO add unmarkPaymentAsPaid method
+    public PaymentVO markPaymentAsPaid(
+            @Parameter(description = "ID of the child to update") @PathVariable("id") Integer paymentId) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
 
-        return invoiceService.markInvoiceAsPaid(invoiceId, organizationId);
+        return paymentService.PaymentAsPaid(paymentId, organizationId);
     }
 }

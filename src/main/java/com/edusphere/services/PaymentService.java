@@ -2,16 +2,16 @@ package com.edusphere.services;
 
 
 import com.edusphere.entities.ChildEntity;
-import com.edusphere.entities.InvoiceEntity;
+import com.edusphere.entities.PaymentEntity;
 import com.edusphere.exceptions.ChildNotFoundException;
-import com.edusphere.exceptions.invoices.InvoiceAlreadyPaidException;
-import com.edusphere.exceptions.invoices.InvoiceNotFoundException;
-import com.edusphere.mappers.InvoiceMapper;
+import com.edusphere.exceptions.payments.PaymentAlreadyPaidException;
+import com.edusphere.exceptions.payments.PaymentNotFoundException;
+import com.edusphere.mappers.PaymentMapper;
 import com.edusphere.mappers.SkippedDaysMapper;
 import com.edusphere.repositories.ChildRepository;
-import com.edusphere.repositories.InvoiceRepository;
+import com.edusphere.repositories.PaymentRepository;
 import com.edusphere.repositories.SkippedDaysRepository;
-import com.edusphere.vos.InvoiceVO;
+import com.edusphere.vos.PaymentVO;
 import com.edusphere.vos.SkippedDaysVO;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -37,19 +37,19 @@ import java.util.stream.Collectors;
 
 @Service
 // just a demo on how to generate an invoice
-public class InvoiceService {
+public class PaymentService {
 
-    private final InvoiceRepository invoiceRepository;
+    private final PaymentRepository paymentRepository;
     private final SkippedDaysRepository skippedDaysRepository;
-    private final InvoiceMapper invoiceMapper;
+    private final PaymentMapper paymentMapper;
     private final ChildRepository childRepository;
     private final SkippedDaysMapper skippedDaysMapper;
 
-    public InvoiceService(InvoiceRepository invoiceRepository, SkippedDaysRepository skippedDaysRepository,
-                          InvoiceMapper invoiceMapper, ChildRepository childRepository, SkippedDaysMapper skippedDaysMapper) {
-        this.invoiceRepository = invoiceRepository;
+    public PaymentService(PaymentRepository paymentRepository, SkippedDaysRepository skippedDaysRepository,
+                          PaymentMapper paymentMapper, ChildRepository childRepository, SkippedDaysMapper skippedDaysMapper) {
+        this.paymentRepository = paymentRepository;
         this.skippedDaysRepository = skippedDaysRepository;
-        this.invoiceMapper = invoiceMapper;
+        this.paymentMapper = paymentMapper;
         this.childRepository = childRepository;
         this.skippedDaysMapper = skippedDaysMapper;
     }
@@ -147,38 +147,38 @@ public class InvoiceService {
 
     @Transactional
     //TODO add tests for skipDaysPeriods
-    public List<InvoiceVO> getChildInvoicesByMonth(Integer childId, YearMonth month, Integer organizationId) {
+    public List<PaymentVO> getChildPaymentsByMonth(Integer childId, YearMonth month, Integer organizationId) {
         ChildEntity childEntity = getChildEntity(childId, organizationId);
 
         List<SkippedDaysVO> unprocessedSkipDays = getSkippedDaysPeriods(childId);
-        List<InvoiceVO> invoicesForChildForMonth = getInvoicesForChildForMonth(childId, month, organizationId);
+        List<PaymentVO> paymentsForChildForMonth = getPaymentsForChildForMonth(childId, month, organizationId);
 
 
-        return substractSkippedDaysAmountsFromInvoicesAmountForChildInvoiceList(invoicesForChildForMonth, unprocessedSkipDays, childEntity);
+        return substractSkippedDaysAmountsFromPaymentsAmountForChildPaymentList(paymentsForChildForMonth, unprocessedSkipDays, childEntity);
     }
 
     //TODO add skipDaysPeriods logic
-    public List<InvoiceVO> getParentInvoicesByMonth(Integer parentId, YearMonth month, Integer organizationId) {
-        return getInvoicesForParentId(parentId, month, organizationId);
+    public List<PaymentVO> getParentPaymentsByMonth(Integer parentId, YearMonth month, Integer organizationId) {
+        return getPaymentsForParentId(parentId, month, organizationId);
     }
 
-    public InvoiceVO markInvoiceAsPaid(Integer invoiceId, Integer organizationId) {
-        InvoiceEntity invoiceEntity = invoiceRepository.findByIdAndChildParentOrganizationId(invoiceId, organizationId)
-                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
+    public PaymentVO PaymentAsPaid(Integer paymentId, Integer organizationId) {
+        PaymentEntity paymentEntity = paymentRepository.findByIdAndChildParentOrganizationId(paymentId, organizationId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        if (invoiceEntity.getIsPaid()) {
-            throw new InvoiceAlreadyPaidException(invoiceId);
+        if (paymentEntity.getIsPaid()) {
+            throw new PaymentAlreadyPaidException(paymentId);
         }
-        invoiceEntity.setIsPaid(true);
-        invoiceRepository.save(invoiceEntity);
-        return invoiceMapper.toVO(invoiceEntity);
+        paymentEntity.setIsPaid(true);
+        paymentRepository.save(paymentEntity);
+        return paymentMapper.toVO(paymentEntity);
     }
 
-    private List<InvoiceVO> getInvoicesForParentId(Integer parentId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
+    private List<PaymentVO> getPaymentsForParentId(Integer parentId, YearMonth month, Integer organizationId) {
+        return paymentRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
                         month.getYear(), organizationId)
                 .stream()
-                .map(invoiceMapper::toVO)
+                .map(paymentMapper::toVO)
                 .collect(Collectors.toList());
     }
 
@@ -211,15 +211,16 @@ public class InvoiceService {
         return weekdayCount;
     }
 
-    private static void substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(InvoiceVO invoiceVO, SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
-        invoiceVO.setAmountWithSkipDays(invoiceVO.getAmountWithoutSkipDays() - amountForSkippedDays);
-        invoiceVO.addSkippedDaysVO(skippedDaysVO);
+    private static void substractSkipDaysAmountFromPaymentsAmountAndAddSetItAsProccessedInMemory(PaymentVO paymentVO,
+                                                                                                 SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
+        paymentVO.setAmountWithSkipDays(paymentVO.getAmountWithoutSkipDays() - amountForSkippedDays);
+        paymentVO.addSkippedDaysVO(skippedDaysVO);
         skippedDaysVO.setProccessed(true);
         skippedDaysVO.setAmount(amountForSkippedDays);
     }
 
-    private static boolean skipDaysAmountCanBeSubstractedFromInvoiceAmount(InvoiceVO invoiceVO, int amountForSkippedDays) {
-        return amountForSkippedDays < invoiceVO.getAmountWithSkipDays() && invoiceVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
+    private static boolean skipDaysAmountCanBeSubstractedFromPaymentAmount(PaymentVO paymentVO, int amountForSkippedDays) {
+        return amountForSkippedDays < paymentVO.getAmountWithSkipDays() && paymentVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
     }
 
     private static List<SkippedDaysVO> getUnproccessedSkipDaysFromInMemorySkipDays(List<SkippedDaysVO> unprocessedSkipDays) {
@@ -228,11 +229,11 @@ public class InvoiceService {
                 .toList();
     }
 
-    private List<InvoiceVO> getInvoicesForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
-        return invoiceRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
+    private List<PaymentVO> getPaymentsForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
+        return paymentRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
                         month.getYear(), organizationId)
                 .stream()
-                .map(invoiceMapper::toVO)
+                .map(paymentMapper::toVO)
                 .collect(Collectors.toList());
     }
 
@@ -248,20 +249,23 @@ public class InvoiceService {
                 .toList();
     }
 
-    private List<InvoiceVO> substractSkippedDaysAmountsFromInvoicesAmountForChildInvoiceList(List<InvoiceVO> invoicesForChildForMonth, List<SkippedDaysVO> unprocessedSkipDays, ChildEntity childEntity) {
-        invoicesForChildForMonth.forEach(invoiceVO -> substractSkippedDaysAmountsFromInvoicesAmount(invoiceVO, unprocessedSkipDays, childEntity.getMealPrice()));
+    private List<PaymentVO> substractSkippedDaysAmountsFromPaymentsAmountForChildPaymentList(List<PaymentVO> paymentsForChildForMonth,
+                                                                                             List<SkippedDaysVO> unprocessedSkipDays,
+                                                                                             ChildEntity childEntity) {
+        paymentsForChildForMonth.forEach(paymentVO -> substractSkippedDaysAmountsFromPaymentsAmount(paymentVO,
+                unprocessedSkipDays, childEntity.getMealPrice()));
 
-        return invoicesForChildForMonth;
+        return paymentsForChildForMonth;
     }
 
-    private void substractSkippedDaysAmountsFromInvoicesAmount(InvoiceVO invoiceVO, List<SkippedDaysVO> unprocessedSkipDays, Integer childMealPrice) {
-        List<SkippedDaysVO> unprocessedBeforeProcessingInvoice = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
+    private void substractSkippedDaysAmountsFromPaymentsAmount(PaymentVO paymentVO, List<SkippedDaysVO> unprocessedSkipDays, Integer childMealPrice) {
+        List<SkippedDaysVO> unprocessedBeforeProcessingPayment = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
 
-        unprocessedBeforeProcessingInvoice.forEach(skippedDaysVO -> {
+        unprocessedBeforeProcessingPayment.forEach(skippedDaysVO -> {
             int amountForCurrentSkipDaysPeriod = getAmountForSkippedDaysEntity(childMealPrice, skippedDaysVO);
 
-            if (skipDaysAmountCanBeSubstractedFromInvoiceAmount(invoiceVO, amountForCurrentSkipDaysPeriod)) {
-                substractSkipDaysAmountFromInvoicesAmountAndAddSetItAsProccessedInMemory(invoiceVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
+            if (skipDaysAmountCanBeSubstractedFromPaymentAmount(paymentVO, amountForCurrentSkipDaysPeriod)) {
+                substractSkipDaysAmountFromPaymentsAmountAndAddSetItAsProccessedInMemory(paymentVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
             }
         });
     }
