@@ -43,7 +43,7 @@ public class AuthControllerIntegrationTest {
     private UserTestUtils userUtils;
 
     @Test
-    public void authenticateUser() throws Exception {
+    void authenticateUser() throws Exception {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity roleEntity = roleUtils.saveRole(OWNER.toString(), organizationEntity);
         UserEntity userEntity = userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, roleEntity);
@@ -52,7 +52,7 @@ public class AuthControllerIntegrationTest {
         loginRequestVO.setUsername(userEntity.getUsername());
         loginRequestVO.setPassword(PASSWORD);
 
-        MvcResult result =  mockMvc.perform(MockMvcRequestBuilders.post("/login")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/login")
                         .content(asJsonString(loginRequestVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())

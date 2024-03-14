@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
@@ -32,7 +31,7 @@ public class JwtUtil {
 
         return JWT.create()
                 .withSubject(authentication.getName())
-                .withClaim("roles", roles.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
+                .withClaim("roles", roles.stream().map(GrantedAuthority::getAuthority).toList())
                 .withExpiresAt(new Date(System.currentTimeMillis() + expiration))
                 .sign(Algorithm.HMAC512(secret.getBytes()));
     }
