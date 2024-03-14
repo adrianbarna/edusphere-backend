@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class RoleControllerIntegrationTest {
+ class RoleControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -66,7 +66,7 @@ public class RoleControllerIntegrationTest {
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
+     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
@@ -79,7 +79,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void getAllRoles() {
+     void getAllRoles() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllRolesWhenCalledByUser(allowedUser);
@@ -106,7 +106,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void getAllRolesShouldFailForNotAllowedRoles() {
+     void getAllRolesShouldFailForNotAllowedRoles() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllRolesWhenCalledByUserShouldFailForNotAllowedRoles(notAllowedUser);
@@ -129,7 +129,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void getRoleById() {
+     void getRoleById() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getRoleByIdWhenCalledByUser(allowedUser);
@@ -153,7 +153,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void getRoleByIdShouldFailForNotAllowedRoles() {
+     void getRoleByIdShouldFailForNotAllowedRoles() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getRoleByIdWhenCalledByUserShouldFailForNotAllowedRoles(notAllowedUser);
@@ -177,7 +177,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void getRoleByIdShouldFailWhenTakingFromAnotherOrganization() {
+     void getRoleByIdShouldFailWhenTakingFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getRoleByIdWhenCalledByUserShouldFailWhenTakingFromAnotherOrganization(allowedUser);
@@ -202,7 +202,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void createRole() {
+     void createRole() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 createRoleWhenCalledByUser(allowedUser);
@@ -230,7 +230,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void createRoleShouldFailForNotAllowedRoles() {
+     void createRoleShouldFailForNotAllowedRoles() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 createRoleShouldFailForNotAllowedRoles(notAllowedUser);
@@ -258,7 +258,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void updateRole() {
+     void updateRole() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 updateRoleWhenCalledByUser(allowedUser);
@@ -289,7 +289,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void updateRoleShouldFailWhenRoleFromAnotherOrganization() {
+     void updateRoleShouldFailWhenRoleFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 updateRoleShouldFailWhenRoleFromAnotherOrganization(allowedUser);
@@ -324,7 +324,7 @@ public class RoleControllerIntegrationTest {
 
 
     @Test
-    public void deleteRole() {
+     void deleteRole() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteRoleWhenCalledByUser(allowedUser);
@@ -350,7 +350,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void deleteRole_shouldFailWhenDeletingFromAnotherOrganization() {
+     void deleteRole_shouldFailWhenDeletingFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteRoleShouldFailWhenCalledByUserFromAnotherOrganization(allowedUser);
@@ -379,7 +379,7 @@ public class RoleControllerIntegrationTest {
     }
 
     @Test
-    public void deleteRole_shouldFailForNotAllowedUser() {
+     void deleteRole_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteRole_shouldFailForNotAllowedUser(notAllowedUser);
@@ -409,7 +409,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void assignRoleToUser() {
+     void assignRoleToUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 assignRoleToUserWhenCalledByUser(allowedUser);
@@ -444,7 +444,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void assignRoleFromAnotherOrganizationToUserShouldFail() {
+     void assignRoleFromAnotherOrganizationToUserShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 assignRoleFromAnotherOrganizationToUserShouldFail(allowedUser);
@@ -482,7 +482,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void assignRole_shouldFailForNotAllowedUser() {
+     void assignRole_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 assignRole_shouldFailForNotAllowedUser(notAllowedUser);
@@ -520,7 +520,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void assignRoleToUserFromAnotherOrganizationShouldFail() {
+     void assignRoleToUserFromAnotherOrganizationShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 assignRoleToUserFromAnotherOrganizationShouldFail(allowedUser);
@@ -559,7 +559,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void changeRolesToUser() {
+     void changeRolesToUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 changeRolesToUserWhenCalledByUser(allowedUser);
@@ -595,7 +595,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void changeRolesToUserShouldFailWhenAddingRoleFromAnotherOrganization() {
+     void changeRolesToUserShouldFailWhenAddingRoleFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 changeRolesToUserShouldFailWhenAddingRoleFromAnotherOrganization(allowedUser);
@@ -634,7 +634,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void changeRoles_shouldFailForNotAllowedUser() {
+     void changeRoles_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 changeRoles_shouldFailForNotAllowedUser(notAllowedUser);
@@ -674,7 +674,7 @@ public class RoleControllerIntegrationTest {
 
     @Test
     @Transactional
-    public void changeRolesShouldFailWhenAddingRoleToUserFromAnotherOrganization() {
+     void changeRolesShouldFailWhenAddingRoleToUserFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 changeRolesShouldFailWhenAddingRoleToUserFromAnotherOrganization(allowedUser);

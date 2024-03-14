@@ -36,10 +36,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class IncidentsControllerIntegrationTest {
+ class IncidentsControllerIntegrationTest {
 
-    public static final String INCIDENTS_ENDPOINT = "/incidents";
-    public static final String PASSWORD = "123456";
+     static final String INCIDENTS_ENDPOINT = "/incidents";
+     static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -68,7 +68,7 @@ public class IncidentsControllerIntegrationTest {
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
+     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
@@ -81,7 +81,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void getAllIncidents() {
+     void getAllIncidents() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllIncidents(allowedUser);
@@ -112,7 +112,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void getAllIncidents_shouldFailForWrongRole() {
+     void getAllIncidents_shouldFailForWrongRole() {
         try {
             for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllIncidents_shouldFailForWrongRole(allowedUser);
@@ -135,7 +135,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void getIncidentById() {
+     void getIncidentById() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getIncidentById(allowedUser);
@@ -158,7 +158,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void getIncidentById_shoulfFailIfFromAnotherOrganization() {
+     void getIncidentById_shoulfFailIfFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getIncidentById_shoulfFailIfFromAnotherOrganization(allowedUser);
@@ -185,7 +185,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void getIncidentById_shoulfFailForWrongRole() {
+     void getIncidentById_shoulfFailForWrongRole() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getIncidentById_shoulfFailForWrongRole(notAllowedUser);
@@ -208,7 +208,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void createIncident() {
+     void createIncident() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 createIncident(allowedUser);
@@ -251,7 +251,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void createIncident_shouldFailForWrongRole() {
+     void createIncident_shouldFailForWrongRole() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 createIncident_shouldFailForWrongRole(notAllowedUser);
@@ -280,7 +280,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void updateIncident() {
+     void updateIncident() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 IncidentEntity incidentEntity = incidentUtils.saveIncident(allowedUser.getOrganization());
@@ -324,7 +324,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void updateIncident_shouldFailWhenUpdatingFromAnotherOrganization() {
+     void updateIncident_shouldFailWhenUpdatingFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 IncidentEntity incidentEntity = incidentUtils.saveIncident(allowedUser.getOrganization());
@@ -356,7 +356,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void updateIncident_shouldFailForNotAllowedUsers() {
+     void updateIncident_shouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 IncidentEntity incidentEntity = incidentUtils.saveIncident(notAllowedUser.getOrganization());
@@ -387,7 +387,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void deleteIncident() {
+     void deleteIncident() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -414,7 +414,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void deleteIncident_shouldFailForWrongRole() {
+     void deleteIncident_shouldFailForWrongRole() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteIncident_shouldFailForWrongRole(notAllowedUser);
@@ -439,7 +439,7 @@ public class IncidentsControllerIntegrationTest {
     }
 
     @Test
-    public void deleteIncident_shouldFailWhenDeletingFromWrongOrganization() {
+     void deleteIncident_shouldFailWhenDeletingFromWrongOrganization() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {

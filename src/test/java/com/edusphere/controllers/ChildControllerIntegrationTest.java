@@ -35,9 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class ChildControllerIntegrationTest {
+ class ChildControllerIntegrationTest {
 
-    public static final String PASSWORD = "123456";
+     static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -66,7 +66,7 @@ public class ChildControllerIntegrationTest {
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
+     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
@@ -80,7 +80,7 @@ public class ChildControllerIntegrationTest {
 
 
     @Test
-    public void getAllChildren() {
+     void getAllChildren() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllChildren(allowedUser);
@@ -107,7 +107,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getAllChildren_shouldFailForNotAllowedUsers() {
+     void getAllChildren_shouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllChildren_shouldFailForNotAllowedUsers(notAllowedUser);
@@ -130,7 +130,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildById() {
+     void getChildById() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildById(allowedUser);
@@ -153,7 +153,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildById_shouldFailWhenTakenFromAnotherOrganization() {
+     void getChildById_shouldFailWhenTakenFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildById_shouldFailWhenTakenFromAnotherOrganization(allowedUser);
@@ -177,7 +177,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildById_shouldFailForNotAllowedUser() {
+     void getChildById_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getChildById_shouldFailForNotAllowedUser(notAllowedUser);
@@ -199,7 +199,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildByParentId() {
+     void getChildByParentId() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildByParentId(allowedUser);
@@ -222,7 +222,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization() {
+     void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(allowedUser);
@@ -246,7 +246,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildByParentId_shouldFailForNotAllowedUser() {
+     void getChildByParentId_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getChildByParentId_shouldFailForNotAllowedUser(notAllowedUser);
@@ -268,7 +268,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildForParent() {
+     void getChildForParent() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildForParent(allowedUser);
@@ -291,7 +291,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void getChildForParen_shouldFailWhenRetrievingWrongChild() {
+     void getChildForParen_shouldFailWhenRetrievingWrongChild() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildForParen_shouldFailWhenRetrievingWrongChild(allowedUser);
@@ -312,7 +312,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void addChild() {
+     void addChild() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -356,7 +356,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void addChildInAClassFromAnotherOrganization_shouldFail() {
+     void addChildInAClassFromAnotherOrganization_shouldFail() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -392,7 +392,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void addChildWithParentFromAnotherOrganization_shouldFail() {
+     void addChildWithParentFromAnotherOrganization_shouldFail() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -427,7 +427,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void updateChild() {
+     void updateChild() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -471,7 +471,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void updateChild_shouldFailWhenParentInAnotherOrganization() {
+     void updateChild_shouldFailWhenParentInAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -514,7 +514,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void updateChild_shouldFailWhenClassInAnotherOrganization() {
+     void updateChild_shouldFailWhenClassInAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -557,7 +557,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void updateChild_shouldFailForNotAllowedUsers() {
+     void updateChild_shouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
 
@@ -600,7 +600,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void deleteChild() {
+     void deleteChild() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteChild(allowedUser);
@@ -622,7 +622,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void deleteChild_shouldFailWhenChildInAnotherOrganization() {
+     void deleteChild_shouldFailWhenChildInAnotherOrganization() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteChild_shouldFailWhenChildInAnotherOrganization(allowedUser);
@@ -644,7 +644,7 @@ public class ChildControllerIntegrationTest {
     }
 
     @Test
-    public void deleteChild_shouldFailForNotAllowedUsers() {
+     void deleteChild_shouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteChild_shouldFailForNotAllowedUsers(notAllowedUser);

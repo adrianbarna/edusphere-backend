@@ -38,9 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class OrganizationControllerIntegrationTest {
+ class OrganizationControllerIntegrationTest {
 
-    public static final String PASSWORD = "123456";
+     static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -63,7 +63,7 @@ public class OrganizationControllerIntegrationTest {
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
+     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
@@ -76,7 +76,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void addOrganization() {
+     void addOrganization() {
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -116,7 +116,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void addOrganizationShouldFailForNotAllowedUser() {
+     void addOrganizationShouldFailForNotAllowedUser() {
         try {
             // Test adding an organization should fail for not allowed users.
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -143,7 +143,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void getAllOrganizations() {
+     void getAllOrganizations() {
         try {
             try {
                 // Test adding an organization should fail for not allowed users.
@@ -173,7 +173,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void getAllOrganizationsShouldFailForNotAllowedUsers() {
+     void getAllOrganizationsShouldFailForNotAllowedUsers() {
         try {
             try {
                 // Test adding an organization should fail for not allowed users.
@@ -198,7 +198,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void getOrganizationById() {
+     void getOrganizationById() {
         try {
             // Test adding an organization should fail for not allowed users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -222,7 +222,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void getOrganizationByIdShouldFailForNotAllowedUser() {
+     void getOrganizationByIdShouldFailForNotAllowedUser() {
         try {
             // Test adding an organization should fail for not allowed users.
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
@@ -242,7 +242,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void getOrganizationByIdShouldFailForInvalidId() {
+     void getOrganizationByIdShouldFailForInvalidId() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
@@ -256,7 +256,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void updateOrganization() {
+     void updateOrganization() {
         try {
             // Test updating an organization.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -284,7 +284,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void updateOrganizationShouldFailForNotAllowedUser() {
+     void updateOrganizationShouldFailForNotAllowedUser() {
         try {
             // Test updating an organization should fail for not allowed users.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -306,7 +306,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void deleteOrganization() {
+     void deleteOrganization() {
         try {
             // Test deleting an organization.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -324,7 +324,7 @@ public class OrganizationControllerIntegrationTest {
     }
 
     @Test
-    public void deleteOrganizationShouldFailForNotAllowedUser() {
+     void deleteOrganizationShouldFailForNotAllowedUser() {
         try {
             // Test deleting an organization should fail for not allowed users.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();

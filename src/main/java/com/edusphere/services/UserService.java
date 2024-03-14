@@ -78,7 +78,7 @@ public class UserService {
         userEntity.setSurname(userRequestVO.getSurname());
         userEntity.setName(userRequestVO.getName());
         userEntity.setPassword(passwordEncoder.encode(userRequestVO.getPassword()));
-        userEntity.setActivated(userRequestVO.getIsActivated());
+        userEntity.setIsActivated(userRequestVO.getIsActivated());
         if (userRequestVO.getClassEntityId() != null) {
             userEntity.setClassEntity(classUtil.getClassOrThrowException(userRequestVO.getClassEntityId(),
                     organizationId));

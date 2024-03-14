@@ -38,9 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class ClassControllerIntegrationTest {
-    public static final String PASSWORD = "123456";
-    public static final String CLASS_ENDPOINT = "/class";
+ class ClassControllerIntegrationTest {
+     static final String PASSWORD = "123456";
+     static final String CLASS_ENDPOINT = "/class";
     @Autowired
     private MockMvc mockMvc;
 
@@ -64,7 +64,7 @@ public class ClassControllerIntegrationTest {
 
 
     @Test
-    public void getAllClasses() {
+     void getAllClasses() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -104,7 +104,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void getAllClasses_shouldFailForNotAllowedRoles() {
+     void getAllClasses_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -133,7 +133,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void getClassById() {
+     void getClassById() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -167,7 +167,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void getClassById_shouldFailWhenIsAWrongOrganization() {
+     void getClassById_shouldFailWhenIsAWrongOrganization() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -202,7 +202,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void getClassById_shouldFailForNotAllowedRoles() {
+     void getClassById_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -233,7 +233,7 @@ public class ClassControllerIntegrationTest {
 
 
     @Test
-    public void addClass() {
+     void addClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -277,7 +277,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void addClass_shouldFailForWrongRole() {
+     void addClass_shouldFailForWrongRole() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -317,7 +317,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void updateClass() {
+     void updateClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -372,7 +372,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void updateClass_shouldFailWhenUpdatingWithTeacherFromAnotherOrganization() {
+     void updateClass_shouldFailWhenUpdatingWithTeacherFromAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -416,7 +416,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void updateClass_shouldFailForNotAllowedUsers() {
+     void updateClass_shouldFailForNotAllowedUsers() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
@@ -459,7 +459,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void deleteClass() {
+     void deleteClass() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -493,7 +493,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void deleteClass_shouldFailForWrongRole() {
+     void deleteClass_shouldFailForWrongRole() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
@@ -529,7 +529,7 @@ public class ClassControllerIntegrationTest {
     }
 
     @Test
-    public void deleteClass_shouldFailWhenDeletingClassFromAnotherOrganization() {
+     void deleteClass_shouldFailWhenDeletingClassFromAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);

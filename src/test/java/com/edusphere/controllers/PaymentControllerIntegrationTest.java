@@ -33,9 +33,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class PaymentControllerIntegrationTest {
-    public static final String PASSWORD = "123456";
-    public static final String PAYMENT_ENDPOINT = "/payment";
+ class PaymentControllerIntegrationTest {
+     static final String PASSWORD = "123456";
+     static final String PAYMENT_ENDPOINT = "/payment";
     @Autowired
     private MockMvc mockMvc;
 
@@ -62,7 +62,7 @@ public class PaymentControllerIntegrationTest {
     private ChildTestUtils childUtils;
 
     @Test
-    public void getChildPayments() {
+     void getChildPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -110,7 +110,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void getChildPayments_shouldFailForNotAllowedRoles() {
+     void getChildPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -148,7 +148,7 @@ public class PaymentControllerIntegrationTest {
 
     @Test
     //TODO cover the cases when child has skipDays
-    public void getParentPayments() {
+     void getParentPayments() {
 
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -202,7 +202,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void getParentPayments_shouldFailForNotAllowedRoles() {
+     void getParentPayments_shouldFailForNotAllowedRoles() {
 
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
@@ -238,7 +238,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPaymentAsPaid() {
+     void markPaymentAsPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -281,7 +281,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPaymentAsUnpaid() {
+     void markPaymentAsUnpaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -324,7 +324,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPaymentAsPaid_shouldFailIfAlreadyPaid() {
+     void markPaymentAsPaid_shouldFailIfAlreadyPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
@@ -365,7 +365,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPayment_shouldFailForNotAllowedRoles() {
+     void markPayment_shouldFailForNotAllowedRoles() {
         final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
@@ -406,7 +406,7 @@ public class PaymentControllerIntegrationTest {
     }
 
     @Test
-    public void markPayment_shouldFailForAnotherOrganization() {
+     void markPayment_shouldFailForAnotherOrganization() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);

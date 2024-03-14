@@ -55,7 +55,7 @@ public class UserMapper {
                 .username(userEntity.getUsername())
                 .name(userEntity.getName())
                 .surname(userEntity.getSurname())
-                .isActivated(userEntity.getActivated())
+                .isActivated(userEntity.getIsActivated())
                 .roleVOList(roles)
                 .build();
     }

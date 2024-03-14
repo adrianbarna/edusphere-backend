@@ -47,29 +47,37 @@ public class UserEntity {
     private ClassEntity classEntity;
 
     @OneToMany(mappedBy = "parent")
+    @Builder.Default
     private Set<ChildEntity> children = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "owner")
+    @Builder.Default
     private Set<EventEntity> events = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "parent")
+    @Builder.Default
     private Set<FeedbackEntity> feedbacks = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "teacher")
+    @Builder.Default
     private Set<GoalEntity> goals = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "parent")
+    @Builder.Default
     private Set<MessageEntity> messages = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "author")
+    @Builder.Default
     private Set<NewsletterEntity> newsletters = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "teacher")
+    @Builder.Default
     private Set<ReportEntity> reports = new LinkedHashSet<>();
 
     @ManyToMany
     @JoinTable(joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @Builder.Default
     private Set<RoleEntity> roles = new LinkedHashSet<>();
 
 
@@ -78,5 +86,4 @@ public class UserEntity {
             roles.add(roleEntity);
         }
     }
-
 }

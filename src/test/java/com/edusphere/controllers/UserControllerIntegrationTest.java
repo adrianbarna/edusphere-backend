@@ -37,9 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class UserControllerIntegrationTest {
+ class UserControllerIntegrationTest {
 
-    public static final String PASSWORD = "123456";
+     static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -62,7 +62,7 @@ public class UserControllerIntegrationTest {
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
+     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
@@ -76,7 +76,7 @@ public class UserControllerIntegrationTest {
 
 
     @Test
-    public void getAllUsers() {
+     void getAllUsers() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllUsersWhenCalledByUser(allowedUser);
@@ -106,7 +106,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getAllUsersShouldFailForNotAllowedUsers() {
+     void getAllUsersShouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllUsersWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -127,7 +127,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserById() {
+     void getUserById() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getUserByIdWhenCalledByUser(allowedUser);
@@ -148,7 +148,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserById_shouldFailForNotAllowedUser() {
+     void getUserById_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getUserByIdWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -167,7 +167,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserByIdFromAnotherOrganizationShouldFail() {
+     void getUserByIdFromAnotherOrganizationShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getUserFromAnotherOrganizationByIdShouldFailWhenCalledByUser(allowedUser);
@@ -190,7 +190,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void createUserTest() {
+     void createUserTest() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 createUserWhenCalledByUser(allowedUser);
@@ -219,7 +219,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void createUserTestShouldFailForNotAllowedUser() {
+     void createUserTestShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 createUserWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -247,7 +247,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void updateUser() {
+     void updateUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -279,13 +279,13 @@ public class UserControllerIntegrationTest {
 
         UserEntity updatedUser = userRepository.findByUsername(userRequestVO.getUsername()).orElseThrow(AssertionFailedError::new);
         assertEquals(userRequestVO.getUsername(), updatedUser.getUsername());
-        assertEquals(userRequestVO.getIsActivated(), updatedUser.getActivated());
+        assertEquals(userRequestVO.getIsActivated(), updatedUser.getIsActivated());
         assertEquals(userRequestVO.getName(), updatedUser.getName());
         assertEquals(userRequestVO.getSurname(), updatedUser.getSurname());
     }
 
     @Test
-    public void updateUserShouldFailForNotAllowedUser() {
+     void updateUserShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
 
@@ -316,7 +316,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void updateUserFromAnotherOrganizationByAdminShouldFail() {
+     void updateUserFromAnotherOrganizationByAdminShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 updateUserWhenCalledByUserFromAnotherOrganizationShouldFaild(allowedUser);
@@ -353,7 +353,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUser() {
+     void deleteUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteUser(allowedUser);
@@ -375,7 +375,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUserTestShouldFailForNotAllowedUser() {
+     void deleteUserTestShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteUserWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -395,7 +395,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUserFromAnotherOrganizationShouldFail() {
+     void deleteUserFromAnotherOrganizationShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteUserFromAnotherOrganizationWhenCalledByUserShouldFail(allowedUser);
