@@ -78,7 +78,7 @@ public class ChildService {
         List<ChildEntity> childEntities = childRepository.findByParentOrganizationId(organizationId);
         return childEntities.stream()
                 .map(childMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ChildVO> getChildrenByParentId(Integer parentId, Integer organizationId) {
@@ -88,6 +88,6 @@ public class ChildService {
         }
         return childEntities.stream()
                 .map(childMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

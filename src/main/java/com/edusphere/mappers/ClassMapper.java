@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class ClassMapper {
@@ -54,7 +55,7 @@ public class ClassMapper {
                 .name(classEntity.getName())
                 .teacherIds(classEntity.getTeachers().stream()
                         .map(UserEntity::getId)
-                        .collect(Collectors.toList()))
+                        .toList())
                 .build();
     }
 

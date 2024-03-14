@@ -12,7 +12,7 @@ public interface RoleRepository extends JpaRepository<RoleEntity, Integer> {
     Optional<RoleEntity> findByIdAndOrganizationId(Integer roleId, Integer organizationId);
     List<RoleEntity> findByOrganizationId(Integer organizationId);
 
-    Boolean existsByIdAndOrganizationId(Integer roleId, Integer organizationId);
+    boolean existsByIdAndOrganizationId(Integer roleId, Integer organizationId);
     void deleteByIdAndOrganizationId(Integer roleId, Integer organizationId);
 
     Optional<RoleEntity> findByName(String name);

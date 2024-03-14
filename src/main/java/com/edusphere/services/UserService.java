@@ -42,7 +42,7 @@ public class UserService {
     public List<UserResponseVO> getAllUsersByOrganizationWithoutPasswordField(Integer organizationId) {
         return userRepository.findByOrganizationId(organizationId).stream()
                 .map(userMapper::toVOWithoutPassword)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional

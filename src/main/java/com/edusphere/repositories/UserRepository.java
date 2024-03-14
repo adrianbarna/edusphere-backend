@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     Optional<UserEntity> findByIdAndOrganizationId(Integer id, Integer organizationId);
 
-    Boolean existsByIdAndOrganizationId(Integer id, Integer organizationId);
+    boolean existsByIdAndOrganizationId(Integer id, Integer organizationId);
 
     void deleteByIdAndOrganizationId(Integer id, Integer organizationId);
 }
