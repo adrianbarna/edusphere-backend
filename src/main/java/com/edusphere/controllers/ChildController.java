@@ -19,6 +19,7 @@ import java.util.List;
 @RequestMapping("/child")
 @Tag(name = "Child Controller", description = "APIs for managing children")
 @SecurityRequirement(name = "Bearer Authentication")
+//TODO add endpoint as plural
 public class ChildController {
 
     private final ChildService childService;
