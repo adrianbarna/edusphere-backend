@@ -32,7 +32,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -180,7 +179,7 @@ public class PaymentService {
                         month.getYear(), organizationId)
                 .stream()
                 .map(paymentMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private int getAmountForSkippedDaysEntity(Integer childMealPrice, SkippedDaysVO skippedDaysVO) {
@@ -235,7 +234,7 @@ public class PaymentService {
                         month.getYear(), organizationId)
                 .stream()
                 .map(paymentMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ChildEntity getChildEntity(Integer childId, Integer organizationId) {

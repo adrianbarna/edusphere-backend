@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class IncidentService {
@@ -31,7 +30,7 @@ public class IncidentService {
         List<IncidentEntity> incidents = incidentRepository.findAllByChildParentOrganizationId(organizationId);
         return incidents.stream()
                 .map(incidentMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
