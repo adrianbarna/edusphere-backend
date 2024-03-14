@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 
 @Entity
@@ -31,17 +31,19 @@ public class PaymentEntity {
     private Integer amount;
 
     @Column(name = "is_paid", nullable = false)
-    private Boolean isPaid= false;
+    @Builder.Default
+    private boolean isPaid= false;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "pay_type", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "pay_type")
+    //TODO populate it when mark payment as paid
     private PaymentTypeEnum payType;
 
     @NotNull
     @Column(name = "issue_date", nullable = false)
-    private LocalDate issueDate;
+    private Date issueDate;
 
     @Column(name = "due_date")
-    private LocalDate dueDate;
+    private Date dueDate;
 }

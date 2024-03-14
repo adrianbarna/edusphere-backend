@@ -2,17 +2,19 @@ package com.edusphere.services;
 
 
 import com.edusphere.entities.ChildEntity;
+import com.edusphere.entities.DaysNotChargedEntity;
 import com.edusphere.entities.PaymentEntity;
+import com.edusphere.entities.SkippedDaysEntity;
 import com.edusphere.exceptions.ChildNotFoundException;
+import com.edusphere.exceptions.payments.PaymentAlreadyGeneratedException;
 import com.edusphere.exceptions.payments.PaymentAlreadyPaidException;
 import com.edusphere.exceptions.payments.PaymentNotFoundException;
 import com.edusphere.mappers.PaymentMapper;
-import com.edusphere.mappers.SkippedDaysMapper;
 import com.edusphere.repositories.ChildRepository;
+import com.edusphere.repositories.DaysOffRepository;
 import com.edusphere.repositories.PaymentRepository;
 import com.edusphere.repositories.SkippedDaysRepository;
 import com.edusphere.vos.PaymentVO;
-import com.edusphere.vos.SkippedDaysVO;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -31,7 +33,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -42,15 +47,16 @@ public class PaymentService {
     private final SkippedDaysRepository skippedDaysRepository;
     private final PaymentMapper paymentMapper;
     private final ChildRepository childRepository;
-    private final SkippedDaysMapper skippedDaysMapper;
+    private final DaysOffRepository daysOffRepository;
 
     public PaymentService(PaymentRepository paymentRepository, SkippedDaysRepository skippedDaysRepository,
-                          PaymentMapper paymentMapper, ChildRepository childRepository, SkippedDaysMapper skippedDaysMapper) {
+                          PaymentMapper paymentMapper, ChildRepository childRepository,
+                          DaysOffRepository daysOffRepository) {
         this.paymentRepository = paymentRepository;
         this.skippedDaysRepository = skippedDaysRepository;
         this.paymentMapper = paymentMapper;
         this.childRepository = childRepository;
-        this.skippedDaysMapper = skippedDaysMapper;
+        this.daysOffRepository = daysOffRepository;
     }
 
     private ByteArrayInputStream generateInvoice() {
@@ -145,128 +151,149 @@ public class PaymentService {
     }
 
     @Transactional
-    //TODO add tests for skipDaysPeriods
-    public List<PaymentVO> getChildPaymentsByMonth(Integer childId, YearMonth month, Integer organizationId) {
-        ChildEntity childEntity = getChildEntity(childId, organizationId);
+    //TODO add tests for this
+    //TODO this should be called from a batch for each child on the last day of the month
+    public PaymentVO generatePaymentForMonth(Integer childId, Integer organizationId) {
 
-        List<SkippedDaysVO> unprocessedSkipDays = getSkippedDaysPeriods(childId);
-        List<PaymentVO> paymentsForChildForMonth = getPaymentsForChildForMonth(childId, month, organizationId);
+        throwExceptionIfPaymentIsAlreadyGenerated();
 
+        ChildEntity childEntity = childRepository.findByIdAndParentOrganizationId(childId, organizationId)
+                .orElseThrow(() -> new ChildNotFoundException(childId));
 
-        return substractSkippedDaysAmountsFromPaymentsAmountForChildPaymentList(paymentsForChildForMonth, unprocessedSkipDays, childEntity);
+        int paymentAmount = getInitialAmount(childId, organizationId);
+        paymentAmount += childEntity.getBaseTax();
+
+        List<SkippedDaysEntity> unproccessedSkippedDays = skippedDaysRepository.findUnproccessedByChildId(childId);
+        int skippedDays = getTheNumberOfSkippedDays(unproccessedSkippedDays);
+        int totalWeekdaysForCurrentMonth = getTotalWeekdaysForCurrentMonth();
+        int daysOff= getDaysNotCharged(organizationId);
+        int daysChildCheckedIn = totalWeekdaysForCurrentMonth - skippedDays - daysOff;
+
+        paymentAmount += daysChildCheckedIn * childEntity.getMealPrice();
+
+        boolean isPaid = false;
+        isPaid = ifAmountIsNegativeSetPaymentAsPaid(paymentAmount, isPaid);
+
+        PaymentEntity savedPaymentEntity = getSavedPaymentEntity(childEntity, paymentAmount, isPaid);
+
+        markSkippedDaysAsProcessed(unproccessedSkippedDays);
+        return paymentMapper.toVO(savedPaymentEntity);
     }
 
-    //TODO add skipDaysPeriods logic
-    public List<PaymentVO> getParentPaymentsByMonth(Integer parentId, YearMonth month, Integer organizationId) {
-        return getPaymentsForParentId(parentId, month, organizationId);
+    private int getDaysNotCharged(Integer organizationId) {
+            List<DaysNotChargedEntity> daysOffEntities = daysOffRepository.findByOrganizationId(organizationId);
+
+            Calendar cal = Calendar.getInstance();
+            int currentMonth = cal.get(Calendar.MONTH);
+            int currentYear = cal.get(Calendar.YEAR);
+
+            long count = daysOffEntities.stream()
+                    .filter(daysOff -> {
+                        cal.setTime(daysOff.getDate());
+                        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+                        int month = cal.get(Calendar.MONTH);
+                        int year = cal.get(Calendar.YEAR);
+
+                        // Check if the day is in the current month and year, and not on a weekend
+                        return month == currentMonth && year == currentYear &&
+                                (dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY);
+                    })
+                    .count();
+
+            return (int) count;
+        }
+
+    private static void markSkippedDaysAsProcessed(List<SkippedDaysEntity> unproccessedSkippedDays) {
+        unproccessedSkippedDays
+                .forEach(skippedDaysEntity -> skippedDaysEntity.setProccessed(true));
     }
+
+    private PaymentEntity getSavedPaymentEntity(ChildEntity childEntity, int paymentAmount, boolean isPaid) {
+        PaymentEntity paymentEntity = PaymentEntity.builder()
+                .child(childEntity)
+                .amount(paymentAmount)
+                .dueDate(new Date())
+                .issueDate(new Date())
+                .isPaid(isPaid)
+                .build();
+        return paymentRepository.save(paymentEntity);
+    }
+
+    private static boolean ifAmountIsNegativeSetPaymentAsPaid(int paymentAmount, boolean isPaid) {
+        if (paymentAmount <= 0) {
+            isPaid = true;
+        }
+        return isPaid;
+    }
+
+    private int getTheNumberOfSkippedDays(List<SkippedDaysEntity> unproccessedSkippedDays) {
+        return unproccessedSkippedDays.stream()
+                // Assuming a method to convert SkippedDaysEntity to SkippedDaysVO exists
+                .mapToInt(this::getWeekdayCountForSkippedDays)
+                .sum();
+    }
+
+    private int getInitialAmount(Integer childId, Integer organizationId) {
+        Optional<PaymentEntity> lastPaymentByChildIdAndOrganizationId = paymentRepository.findLastPaymentByChildIdAndOrganizationId(childId, organizationId);
+        int paymentAmount = 0;
+
+        if (lastPaymentByChildIdAndOrganizationId.isPresent()) {
+            if (lastPaymentByChildIdAndOrganizationId.get().getAmount() < 0) {
+                paymentAmount = lastPaymentByChildIdAndOrganizationId.get().getAmount();
+            }
+        }
+        return paymentAmount;
+    }
+
+    private void throwExceptionIfPaymentIsAlreadyGenerated() {
+        LocalDate now = LocalDate.now();
+        int currentYear = now.getYear();
+        int currentMonth = now.getMonthValue();
+
+        if (paymentRepository.existsPaymentsForCurrentMonth(currentYear, currentMonth)) {
+            throw new PaymentAlreadyGeneratedException();
+        }
+    }
+
 
     public PaymentVO markPaymentAsPaidOrUnpaid(Integer paymentId, boolean isPaid, Integer organizationId) {
         PaymentEntity paymentEntity = paymentRepository.findByIdAndChildParentOrganizationId(paymentId, organizationId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        if (isPaid && paymentEntity.getIsPaid()) {
+        if (isPaid && paymentEntity.isPaid()) {
             throw new PaymentAlreadyPaidException(paymentId);
         }
 
-        paymentEntity.setIsPaid(isPaid);
+        paymentEntity.setPaid(isPaid);
         paymentRepository.save(paymentEntity);
         return paymentMapper.toVO(paymentEntity);
     }
 
-    private List<PaymentVO> getPaymentsForParentId(Integer parentId, YearMonth month, Integer organizationId) {
-        return paymentRepository.findByParentIdAndMonthAndYearAndOrganizationId(parentId, month.getMonthValue(),
-                        month.getYear(), organizationId)
-                .stream()
-                .map(paymentMapper::toVO)
-                .toList();
+    public static int getTotalWeekdaysForCurrentMonth() {
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate endOfMonth = YearMonth.from(startOfMonth).atEndOfMonth();
+
+        return getWeekdaysCount(startOfMonth, endOfMonth);
     }
 
-    private int getAmountForSkippedDaysEntity(Integer childMealPrice, SkippedDaysVO skippedDaysVO) {
-        int numberOfWeekdays = getWeekdayCountForSkippedDays(skippedDaysVO);
+    private static int getWeekdaysCount(LocalDate startOfMonth, LocalDate endOfMonth) {
+        int weekdays = 0;
+        LocalDate date = startOfMonth;
+        while (!date.isAfter(endOfMonth)) {
+            // Check if the day is a weekday (Monday to Friday)
+            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                weekdays++;
+            }
+            date = date.plusDays(1);
+        }
 
-        return childMealPrice * numberOfWeekdays;
+        return weekdays;
     }
 
-    private int getWeekdayCountForSkippedDays(SkippedDaysVO skippedDaysEntity) {
+    private int getWeekdayCountForSkippedDays(SkippedDaysEntity skippedDaysEntity) {
         LocalDate startDate = skippedDaysEntity.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate endDate = skippedDaysEntity.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        return getWeekdayCount(startDate, endDate);
-    }
-
-    private int getWeekdayCount(LocalDate startDate, LocalDate endDate) {
-        int weekdayCount = 0;
-        LocalDate currentDate = startDate;
-
-        while (!currentDate.isAfter(endDate)) {
-            // Check if the current date is a weekday (Monday to Friday)
-            if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                weekdayCount++;
-            }
-            // Move to the next day
-            currentDate = currentDate.plusDays(1);
-        }
-
-        return weekdayCount;
-    }
-
-    private static void substractSkipDaysAmountFromPaymentsAmountAndAddSetItAsProccessedInMemory(PaymentVO paymentVO,
-                                                                                                 SkippedDaysVO skippedDaysVO, int amountForSkippedDays) {
-        paymentVO.setAmountWithSkipDays(paymentVO.getAmountWithoutSkipDays() - amountForSkippedDays);
-        paymentVO.addSkippedDaysVO(skippedDaysVO);
-        skippedDaysVO.setProccessed(true);
-        skippedDaysVO.setAmount(amountForSkippedDays);
-    }
-
-    private static boolean skipDaysAmountCanBeSubstractedFromPaymentAmount(PaymentVO paymentVO, int amountForSkippedDays) {
-        return amountForSkippedDays < paymentVO.getAmountWithSkipDays() && paymentVO.getAmountWithSkipDays() - amountForSkippedDays >= 0;
-    }
-
-    private static List<SkippedDaysVO> getUnproccessedSkipDaysFromInMemorySkipDays(List<SkippedDaysVO> unprocessedSkipDays) {
-        return unprocessedSkipDays.stream()
-                .filter(skippedDaysEntity -> !skippedDaysEntity.getProccessed())
-                .toList();
-    }
-
-    private List<PaymentVO> getPaymentsForChildForMonth(Integer childId, YearMonth month, Integer organizationId) {
-        return paymentRepository.findByChildIdAndMonthAndYearAndOrganizationId(childId, month.getMonthValue(),
-                        month.getYear(), organizationId)
-                .stream()
-                .map(paymentMapper::toVO)
-                .toList();
-    }
-
-    private ChildEntity getChildEntity(Integer childId, Integer organizationId) {
-        return childRepository.findByIdAndParentOrganizationId(childId, organizationId)
-                .orElseThrow(() -> new ChildNotFoundException(childId));
-    }
-
-    private List<SkippedDaysVO> getSkippedDaysPeriods(Integer childId) {
-        return skippedDaysRepository.findUnproccessedByChildId(childId)
-                .stream()
-                .map(skippedDaysMapper::toVO)
-                .toList();
-    }
-
-    private List<PaymentVO> substractSkippedDaysAmountsFromPaymentsAmountForChildPaymentList(List<PaymentVO> paymentsForChildForMonth,
-                                                                                             List<SkippedDaysVO> unprocessedSkipDays,
-                                                                                             ChildEntity childEntity) {
-        paymentsForChildForMonth.forEach(paymentVO -> substractSkippedDaysAmountsFromPaymentsAmount(paymentVO,
-                unprocessedSkipDays, childEntity.getMealPrice()));
-
-        return paymentsForChildForMonth;
-    }
-
-    private void substractSkippedDaysAmountsFromPaymentsAmount(PaymentVO paymentVO, List<SkippedDaysVO> unprocessedSkipDays, Integer childMealPrice) {
-        List<SkippedDaysVO> unprocessedBeforeProcessingPayment = getUnproccessedSkipDaysFromInMemorySkipDays(unprocessedSkipDays);
-
-        unprocessedBeforeProcessingPayment.forEach(skippedDaysVO -> {
-            int amountForCurrentSkipDaysPeriod = getAmountForSkippedDaysEntity(childMealPrice, skippedDaysVO);
-
-            if (skipDaysAmountCanBeSubstractedFromPaymentAmount(paymentVO, amountForCurrentSkipDaysPeriod)) {
-                substractSkipDaysAmountFromPaymentsAmountAndAddSetItAsProccessedInMemory(paymentVO, skippedDaysVO, amountForCurrentSkipDaysPeriod);
-            }
-        });
+        return getWeekdaysCount(startDate, endDate);
     }
 }

@@ -1,7 +1,10 @@
 package com.edusphere.controllers;
 
 import com.edusphere.controllers.utils.*;
-import com.edusphere.entities.*;
+import com.edusphere.entities.OrganizationEntity;
+import com.edusphere.entities.PaymentEntity;
+import com.edusphere.entities.RoleEntity;
+import com.edusphere.entities.UserEntity;
 import com.edusphere.exceptions.payments.PaymentNotFoundException;
 import com.edusphere.repositories.PaymentRepository;
 import com.edusphere.vos.ClassVO;
@@ -16,16 +19,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
 import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -58,185 +57,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     @Autowired
     private TokenTestUtils tokenUtils;
     
-    @Autowired
-    private ChildTestUtils childUtils;
-
-    @Test
-     void getChildPayments() {
-
-        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
-        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-
-        try {
-            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                getChildPayments(allowedUser);
-            }
-        } catch (Exception e) {
-            fail("Test failed due to an exception: " + e.getMessage());
-        }
-    }
-
-    private void getChildPayments(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
-        PaymentEntity secondPayment = paymentUtils.savePaymentForChildOnMonth(paymentEntity.getChild(),
-                paymentEntity.getIssueDate());
-        PaymentEntity paymentForAnotherChild = paymentUtils.savePayment(userEntity.getOrganization());
-
-        LocalDate currentDate = LocalDate.now();
-        LocalDate previousMonth = currentDate.minusMonths(1);
-
-        PaymentEntity paymentEntityFromPreviousMonth = paymentUtils.savePaymentForChildOnMonth(
-                paymentEntity.getChild(), previousMonth);
-
-        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        String formattedDate = currentDate.format(formatter);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/child/" + paymentEntity.getChild().getId() +
-                                "?month=" + formattedDate)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.[*].id", hasItem(paymentEntity.getId())))
-                .andExpect(jsonPath("$.[*].id", hasItem(secondPayment.getId())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(paymentEntity.getAmount())))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentEntityFromPreviousMonth.getId()))))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentForAnotherChild.getId()))));
-    }
-
-    @Test
-     void getChildPayments_shouldFailForNotAllowedRoles() {
-
-        final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
-        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-
-        try {
-            for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                getChildPayments_shouldFailForNotAllowedRoles(allowedUser);
-            }
-        } catch (Exception e) {
-            fail("Test failed due to an exception: " + e.getMessage());
-        }
-    }
-
-    private void getChildPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
-
-
-        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        LocalDate currentDate = LocalDate.now();
-        String formattedDate = currentDate.format(formatter);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/child/" + paymentEntity.getChild().getId() +
-                                "?month=" + formattedDate)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
-                .andExpect(jsonPath("$.error").value("Access Denied"));
-    }
-
-
-    @Test
-    //TODO cover the cases when child has skipDays
-     void getParentPayments() {
-
-        final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
-        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-
-        try {
-            for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
-                getParentPayments(allowedUser);
-            }
-        } catch (Exception e) {
-            fail("Test failed due to an exception: " + e.getMessage());
-        }
-    }
-
-    private void getParentPayments(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
-        ChildEntity anotherChild = childUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), paymentEntity.getChild().getParent());
-        PaymentEntity PaymentForSecondChild = paymentUtils.savePaymentForChildOnMonth(anotherChild, paymentEntity.getIssueDate());
-
-        LocalDate currentDate = LocalDate.now();
-        LocalDate previousMonth = currentDate.minusMonths(1);
-
-        PaymentEntity PaymentEntityFromPreviousMonth = paymentUtils.savePaymentForChildOnMonth(
-                paymentEntity.getChild(), previousMonth);
-
-        UserEntity aParent = userUtils.saveAParentInOrganization(userEntity.getOrganization());
-        ChildEntity childForAnotherParent = childUtils.saveAChildWithParentInOrganization(userEntity.getOrganization(), aParent);
-        PaymentEntity paymentForAnotherParent = paymentUtils.savePaymentForChildOnMonth(childForAnotherParent, paymentEntity.getIssueDate());
-
-        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        String formattedDate = currentDate.format(formatter);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/parent/" + paymentEntity.getChild().getParent().getId() +
-                                "?month=" + formattedDate)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.[*].id", hasItem(paymentEntity.getId())))
-                .andExpect(jsonPath("$.[*].id", hasItem(PaymentForSecondChild.getId())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(paymentEntity.getAmount())))
-                .andExpect(jsonPath("$.[*].amountWithSkipDays", hasItem(PaymentForSecondChild.getAmount())))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(PaymentEntityFromPreviousMonth.getId()))))
-                .andExpect(jsonPath("$.[*].id", not(hasItem(paymentForAnotherParent.getId()))));
-    }
-
-    @Test
-     void getParentPayments_shouldFailForNotAllowedRoles() {
-
-        final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
-        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
-        RoleEntity parentRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
-        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-
-        try {
-            for (UserEntity allowedUser : notAllowedUsersToCallTheEndpoint) {
-                getParentPayments_shouldFailForNotAllowedRoles(allowedUser);
-            }
-        } catch (Exception e) {
-            fail("Test failed due to an exception: " + e.getMessage());
-        }
-    }
-
-    private void getParentPayments_shouldFailForNotAllowedRoles(UserEntity userEntity) throws Exception {
-        PaymentEntity paymentEntity = paymentUtils.savePayment(userEntity.getOrganization());
-
-        LocalDate currentDate = LocalDate.now();
-
-        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        String formattedDate = currentDate.format(formatter);
-
-        mockMvc.perform(MockMvcRequestBuilders.get(PAYMENT_ENDPOINT + "/parent/" + paymentEntity.getChild().getParent().getId() +
-                                "?month=" + formattedDate)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
-                .andExpect(jsonPath("$.error").value("Access Denied"));
-    }
-
     @Test
      void markPaymentAsPaid() {
         final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
@@ -277,7 +97,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
                 new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(PaymentEntity.getIsPaid());
+        assertTrue(PaymentEntity.isPaid());
     }
 
     @Test
@@ -320,7 +140,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
                 new PaymentNotFoundException(aPayment.getId()));
 
-        assertFalse(PaymentEntity.getIsPaid());
+        assertFalse(PaymentEntity.isPaid());
     }
 
     @Test
@@ -361,7 +181,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
                 new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(PaymentEntity.getIsPaid());
+        assertTrue(PaymentEntity.isPaid());
     }
 
     @Test
@@ -402,7 +222,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         PaymentEntity PaymentEntity = paymentRepository.findById(aPayment.getId()).orElseThrow(() ->
                 new PaymentNotFoundException(aPayment.getId()));
 
-        assertTrue(PaymentEntity.getIsPaid());
+        assertTrue(PaymentEntity.isPaid());
     }
 
     @Test

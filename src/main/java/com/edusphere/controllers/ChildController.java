@@ -67,6 +67,7 @@ public class ChildController {
     @Operation(summary = "Create a child", description = "Create a new child")
     @PostMapping
     @TeacherOrAdminOrOwnerPermission
+    //TODO teacher should not be able to create or delete
     public ResponseEntity<ChildVO> createChild(
             @Parameter(description = "Child data to create") @RequestBody ChildVO childVO) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
@@ -77,6 +78,7 @@ public class ChildController {
     @Operation(summary = "Update a child by ID", description = "Update a child by their ID")
     @PutMapping("/{id}")
     @TeacherOrAdminOrOwnerPermission
+    //TODO teacher should not be able to create or delete
     public ChildVO updateChild(
             @Parameter(description = "ID of the child to update") @PathVariable("id") Integer id,
             @Parameter(description = "Child data to update") @RequestBody ChildVO childVO) {
@@ -87,6 +89,7 @@ public class ChildController {
     @Operation(summary = "Delete a child by ID", description = "Delete a child by their ID")
     @DeleteMapping("/{id}")
     @TeacherOrAdminOrOwnerPermission
+    //TODO teacher should not be able to create or delete
     public void deleteChild(
             @Parameter(description = "ID of the child to delete") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();

@@ -1,32 +1,26 @@
 package com.edusphere.vos;
 
 import com.edusphere.enums.PaymentTypeEnum;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
 
 @Data
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PaymentVO {
     private Integer id;
     private ChildVO childVO;
-    private Integer amountWithoutSkipDays;
-    private Integer amountWithSkipDays;
+    private Integer amount;
     private Boolean isPaid;
     private PaymentTypeEnum payType;
-    private LocalDate issueDate;
-    private LocalDate dueDate;
-    private List<SkippedDaysVO> skippedDaysVOList = new ArrayList<>();
-
-    public void addSkippedDaysVO(SkippedDaysVO skippedDaysVO){
-        skippedDaysVOList.add(skippedDaysVO);
-    }
+    private Date issueDate;
+    private Date dueDate;
 }

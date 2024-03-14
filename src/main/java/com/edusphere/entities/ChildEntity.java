@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -35,7 +36,13 @@ public class ChildEntity {
 
     @NotNull
     @Column(name = "meal_price", nullable = false)
+    @Builder.Default
     private Integer mealPrice = 0;
+
+    @NotNull
+    @Column(name = "start_date", nullable = false)
+    @Builder.Default
+    private Date startDate = new Date();
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

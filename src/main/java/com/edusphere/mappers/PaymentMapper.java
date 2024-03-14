@@ -6,8 +6,6 @@ import com.edusphere.repositories.ChildRepository;
 import com.edusphere.vos.PaymentVO;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-
 @Component
 public class PaymentMapper {
 
@@ -29,7 +27,7 @@ public class PaymentMapper {
                 .child(childRepository.findByIdAndParentOrganizationId(paymentVO.getChildVO().getId(), organizationId)
                         .orElseThrow(() -> new ChildNotFoundException(paymentVO.getChildVO().getId()))
                 )
-                .amount(paymentVO.getAmountWithoutSkipDays())
+                .amount(paymentVO.getAmount())
                 .issueDate(paymentVO.getIssueDate())
                 .dueDate(paymentVO.getDueDate())
                 .isPaid(paymentVO.getIsPaid())
@@ -45,13 +43,11 @@ public class PaymentMapper {
         return PaymentVO.builder()
                 .id(paymentEntity.getId())
                 .childVO(childMapper.toVO(paymentEntity.getChild()))
-                .amountWithoutSkipDays(paymentEntity.getAmount())
-                .amountWithSkipDays(paymentEntity.getAmount())
+                .amount(paymentEntity.getAmount())
                 .issueDate(paymentEntity.getIssueDate())
                 .dueDate(paymentEntity.getDueDate())
-                .isPaid(paymentEntity.getIsPaid())
+                .isPaid(paymentEntity.isPaid())
                 .payType(paymentEntity.getPayType())
-                .skippedDaysVOList(new ArrayList<>())
                 .build();
     }
 }
