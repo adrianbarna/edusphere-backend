@@ -8,7 +8,7 @@ import com.edusphere.repositories.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 @Component
 public class PaymentTestUtils {
@@ -23,8 +23,8 @@ public class PaymentTestUtils {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(organizationEntity);
         paymentEntity.setChild(childEntity);
         paymentEntity.setAmount(1000);
-        paymentEntity.setDueDate(LocalDate.now());
-        paymentEntity.setIssueDate(LocalDate.now());
+        paymentEntity.setDueDate(new Date());
+        paymentEntity.setIssueDate(new Date());
         paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
 
         return paymentRepository.save(paymentEntity);
@@ -35,26 +35,11 @@ public class PaymentTestUtils {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(organizationEntity);
         paymentEntity.setChild(childEntity);
         paymentEntity.setAmount(1000);
-        paymentEntity.setDueDate(LocalDate.now());
-        paymentEntity.setIssueDate(LocalDate.now());
+        paymentEntity.setDueDate(new Date());
+        paymentEntity.setIssueDate(new Date());
         paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
-        paymentEntity.setIsPaid(true);
+        paymentEntity.setPaid(true);
 
         return paymentRepository.save(paymentEntity);
     }
-
-
-    public PaymentEntity savePaymentForChildOnMonth(ChildEntity childEntity,
-                                                    LocalDate month){
-        PaymentEntity paymentEntity = new PaymentEntity();
-        paymentEntity.setChild(childEntity);
-        paymentEntity.setAmount(1000);
-        paymentEntity.setDueDate(month);
-        paymentEntity.setIssueDate(month);
-        paymentEntity.setPayType(PaymentTypeEnum.TRANSFER);
-
-        return paymentRepository.save(paymentEntity);
-    }
-
-
 }
