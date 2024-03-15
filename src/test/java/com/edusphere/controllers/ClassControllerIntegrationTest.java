@@ -562,7 +562,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 // Assert true if it does not exist
-        assertThat(classRepository.findById(aClass.getId()).isEmpty()).isFalse();
+        assertThat(classRepository.findById(aClass.getId())).isPresent();
     }
 
 }
