@@ -55,8 +55,7 @@ public class ClassService {
 
     @Transactional
     public ClassVO createClass(ClassVO classVO, Integer organizationId) {
-        classVO.setOrganizationId(organizationId);
-        ClassEntity classEntity = classMapper.toEntity(classVO);
+        ClassEntity classEntity = classMapper.toEntity(classVO, organizationId);
         setAuthenticathedOrganizationToClassEntity(classEntity, organizationId);
         ClassEntity savedClass = classRepository.save(classEntity);
 
@@ -66,20 +65,22 @@ public class ClassService {
 
     @Transactional
     public ClassVO updateClass(Integer id, ClassVO classVO, Integer organizationId) {
-        classVO.setOrganizationId(organizationId);
         Optional<ClassEntity> classEntityOptional = classRepository.findByIdAndOrganizationId(id, organizationId);
 
         if (classEntityOptional.isEmpty()) {
             throw new ClassNotFoundException(id);
         }
 
-        Set<UserEntity> teachers = classVO.getTeacherIds().stream()
-                .map(teacherId -> teacherUtil.getTeacherOrThrowException(classVO, organizationId))
-                .collect(Collectors.toSet());
 
         ClassEntity classEntity = classEntityOptional.get();
         classEntity.setName(classVO.getName());
-        classEntity.setTeachers(teachers);
+
+        if (classVO.getTeacherIds() != null && !classVO.getTeacherIds().isEmpty()) {
+            Set<UserEntity> teachers = classVO.getTeacherIds().stream()
+                    .map(teacherId -> teacherUtil.getTeacherOrThrowException(organizationId, teacherId))
+                    .collect(Collectors.toSet());
+            classEntity.setTeachers(teachers);
+        }
 
         ClassEntity savedClass = classRepository.save(classEntity);
 

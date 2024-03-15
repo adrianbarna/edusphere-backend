@@ -2,7 +2,6 @@ package com.edusphere.services.security;
 
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
-import com.edusphere.repositories.RoleRepository;
 import com.edusphere.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

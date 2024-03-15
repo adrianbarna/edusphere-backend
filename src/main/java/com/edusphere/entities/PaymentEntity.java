@@ -1,13 +1,16 @@
 package com.edusphere.entities;
 
+import com.edusphere.enums.PaymentTypeEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 
 @Entity
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -27,73 +30,20 @@ public class PaymentEntity {
     @Column(name = "amount", nullable = false)
     private Integer amount;
 
-    @Column(name = "is_paid")
-    private Boolean isPaid;
+    @Column(name = "is_paid", nullable = false)
+    @Builder.Default
+    private boolean isPaid= false;
 
     @NotNull
-    @Column(name = "pay_type", nullable = false, length = Integer.MAX_VALUE)
-    private String payType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pay_type")
+    //TODO populate it when mark payment as paid
+    private PaymentTypeEnum payType;
 
     @NotNull
-    @Column(name = "date", nullable = false)
-    private LocalDate date;
+    @Column(name = "issue_date", nullable = false)
+    private Date issueDate;
 
     @Column(name = "due_date")
-    private LocalDate dueDate;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public ChildEntity getChild() {
-        return child;
-    }
-
-    public void setChild(ChildEntity child) {
-        this.child = child;
-    }
-
-    public Integer getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Integer amount) {
-        this.amount = amount;
-    }
-
-    public Boolean getPaid() {
-        return isPaid;
-    }
-
-    public void setPaid(Boolean paid) {
-        isPaid = paid;
-    }
-
-    public String getPayType() {
-        return payType;
-    }
-
-    public void setPayType(String payType) {
-        this.payType = payType;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(LocalDate dueDate) {
-        this.dueDate = dueDate;
-    }
+    private Date dueDate;
 }

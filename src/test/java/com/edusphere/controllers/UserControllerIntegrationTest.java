@@ -1,7 +1,10 @@
 package com.edusphere.controllers;
 
 import com.edusphere.controllers.exceptions.AssertionFailedError;
-import com.edusphere.controllers.utils.TestUtils;
+import com.edusphere.controllers.utils.OrganizationTestUtils;
+import com.edusphere.controllers.utils.RoleTestUtils;
+import com.edusphere.controllers.utils.TokenTestUtils;
+import com.edusphere.controllers.utils.UserTestUtils;
 import com.edusphere.entities.OrganizationEntity;
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
@@ -22,8 +25,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.edusphere.controllers.utils.TestUtils.asJsonString;
-import static com.edusphere.controllers.utils.TestUtils.generateRandomString;
+import static com.edusphere.controllers.utils.StringTestUtils.asJsonString;
+import static com.edusphere.controllers.utils.StringTestUtils.generateRandomString;
 import static com.edusphere.enums.RolesEnum.*;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -34,9 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.config.name=application-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
-public class UserControllerIntegrationTest {
+ class UserControllerIntegrationTest {
 
-    public static final String PASSWORD = "123456";
+     static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -44,27 +47,36 @@ public class UserControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private TestUtils testUtils;
+    private OrganizationTestUtils organizationUtils;
+
+    @Autowired
+    private RoleTestUtils roleUtils;
+
+    @Autowired
+    private UserTestUtils userUtils;
+
+    @Autowired
+    private TokenTestUtils tokenUtils;
 
     private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
     private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
 
     @BeforeAll
-    public void setup() {
-        OrganizationEntity organizationEntity = testUtils.saveOrganization(generateRandomString(), "aDescription");
-        RoleEntity adminRole = testUtils.saveRole(ADMIN.getName(), organizationEntity);
-        RoleEntity ownerRole = testUtils.saveRole(OWNER.getName(), organizationEntity);
-        RoleEntity teacherRole = testUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = testUtils.saveRole(PARENT.getName(), organizationEntity);
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
-        allowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(testUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+     void setup() {
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
     }
 
 
     @Test
-    public void getAllUsers() {
+     void getAllUsers() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllUsersWhenCalledByUser(allowedUser);
@@ -75,13 +87,13 @@ public class UserControllerIntegrationTest {
     }
 
     private void getAllUsersWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        RoleEntity teacherRole = testUtils.saveRole("TEACHER", userEntity.getOrganization());
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        RoleEntity teacherRole = roleUtils.saveRole("TEACHER", userEntity.getOrganization());
 
-        UserEntity user2 = testUtils.saveUser(userEntity.getUsername() + "Test", "password2", userEntity.getOrganization(),
+        UserEntity user2 = userUtils.saveUser(userEntity.getUsername() + "Test", "password2", userEntity.getOrganization(),
                 teacherRole);
 
-        UserEntity userFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
+        UserEntity userFromAnotherOrganization = userUtils.saveAParentInAnotherOrganization();
 
         mockMvc.perform(MockMvcRequestBuilders.get("/user")
                         .header("Authorization", "Bearer " + token)
@@ -94,7 +106,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getAllUsersShouldFailForNotAllowedUsers() {
+     void getAllUsersShouldFailForNotAllowedUsers() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllUsersWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -105,7 +117,7 @@ public class UserControllerIntegrationTest {
     }
 
     private void getAllUsersWhenCalledByUserShouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/user")
                         .header("Authorization", "Bearer " + token)
@@ -115,7 +127,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserById() {
+     void getUserById() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getUserByIdWhenCalledByUser(allowedUser);
@@ -126,7 +138,7 @@ public class UserControllerIntegrationTest {
     }
 
     private void getUserByIdWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/user/" + userEntity.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -136,7 +148,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserById_shouldFailForNotAllowedUser() {
+     void getUserById_shouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getUserByIdWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -147,7 +159,7 @@ public class UserControllerIntegrationTest {
     }
 
     private void getUserByIdWhenCalledByUserShouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.get("/user/" + userEntity.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -155,7 +167,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void getUserByIdFromAnotherOrganizationShouldFail() {
+     void getUserByIdFromAnotherOrganizationShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getUserFromAnotherOrganizationByIdShouldFailWhenCalledByUser(allowedUser);
@@ -166,19 +178,19 @@ public class UserControllerIntegrationTest {
     }
 
     private void getUserFromAnotherOrganizationByIdShouldFailWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        UserEntity aParentFromAnotherOrganzation = testUtils.saveAParentInAnotherOrganization();
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        UserEntity aParentFromAnotherOrganzation = userUtils.saveAParentInAnotherOrganization();
         mockMvc.perform(MockMvcRequestBuilders.get("/user/" + aParentFromAnotherOrganzation.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul " + aParentFromAnotherOrganzation.getId() + " al user-ului este invalid"));
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Id-ul " + aParentFromAnotherOrganzation.getId() + " al user-ului este invalid"));
     }
 
     @Test
-    public void createUserTest() {
+     void createUserTest() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 createUserWhenCalledByUser(allowedUser);
@@ -190,7 +202,7 @@ public class UserControllerIntegrationTest {
     }
 
     private void createUserWhenCalledByUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         UserRequestVO userRequestVO = new UserRequestVO();
         userRequestVO.setUsername(userEntity.getUsername() + "Newuser");
         userRequestVO.setPassword("newpassword");
@@ -201,13 +213,13 @@ public class UserControllerIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(userRequestVO))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.username").value(userEntity.getUsername() + "Newuser"));
     }
 
     @Test
-    public void createUserTestShouldFailForNotAllowedUser() {
+     void createUserTestShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 createUserWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -219,7 +231,7 @@ public class UserControllerIntegrationTest {
     }
 
     private void createUserWhenCalledByUserShouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
-        String token = testUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
+        String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
         UserRequestVO userRequestVO = new UserRequestVO();
         userRequestVO.setUsername(userEntity.getUsername() + "Newuser");
         userRequestVO.setPassword("newpassword");
@@ -235,7 +247,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void updateUser() {
+     void updateUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -247,8 +259,8 @@ public class UserControllerIntegrationTest {
     }
 
     private void updateUserWhenCalledByUser(UserEntity userWhoWantsToDoTheUpdate) throws Exception {
-        UserEntity userToBeUpdated = testUtils.saveAParentInOrganization(userWhoWantsToDoTheUpdate.getOrganization());
-        String token = testUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
+        UserEntity userToBeUpdated = userUtils.saveAParentInOrganization(userWhoWantsToDoTheUpdate.getOrganization());
+        String token = tokenUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
 
         UserRequestVO userRequestVO = new UserRequestVO();
         userRequestVO.setUsername(generateRandomString());
@@ -267,13 +279,13 @@ public class UserControllerIntegrationTest {
 
         UserEntity updatedUser = userRepository.findByUsername(userRequestVO.getUsername()).orElseThrow(AssertionFailedError::new);
         assertEquals(userRequestVO.getUsername(), updatedUser.getUsername());
-        assertEquals(userRequestVO.getIsActivated(), updatedUser.getActivated());
+        assertEquals(userRequestVO.getIsActivated(), updatedUser.getIsActivated());
         assertEquals(userRequestVO.getName(), updatedUser.getName());
         assertEquals(userRequestVO.getSurname(), updatedUser.getSurname());
     }
 
     @Test
-    public void updateUserShouldFailForNotAllowedUser() {
+     void updateUserShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
 
@@ -285,8 +297,8 @@ public class UserControllerIntegrationTest {
     }
 
     private void updateUserWhenCalledByUserShouldFailForNotAllowedUser(UserEntity userWhoWantsToDoTheUpdate) throws Exception {
-        UserEntity userToBeUpdated = testUtils.saveAParentInOrganization(userWhoWantsToDoTheUpdate.getOrganization());
-        String token = testUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
+        UserEntity userToBeUpdated = userUtils.saveAParentInOrganization(userWhoWantsToDoTheUpdate.getOrganization());
+        String token = tokenUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
 
         UserRequestVO userRequestVO = new UserRequestVO();
         userRequestVO.setUsername(userWhoWantsToDoTheUpdate.getUsername() + "Updated");
@@ -304,7 +316,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void updateUserFromAnotherOrganizationByAdminShouldFail() {
+     void updateUserFromAnotherOrganizationByAdminShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 updateUserWhenCalledByUserFromAnotherOrganizationShouldFaild(allowedUser);
@@ -316,8 +328,8 @@ public class UserControllerIntegrationTest {
 
 
     private void updateUserWhenCalledByUserFromAnotherOrganizationShouldFaild(UserEntity userWhoWantsToDoTheUpdate) throws Exception {
-        UserEntity aParentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
-        String token = testUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
+        UserEntity aParentFromAnotherOrganization = userUtils.saveAParentInAnotherOrganization();
+        String token = tokenUtils.getTokenForUser(userWhoWantsToDoTheUpdate.getUsername(), PASSWORD);
 
         UserRequestVO userRequestVO = new UserRequestVO();
         userRequestVO.setUsername(generateRandomString());
@@ -331,8 +343,8 @@ public class UserControllerIntegrationTest {
                         .content(asJsonString(userRequestVO))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Userul cu id-ul " + aParentFromAnotherOrganization.getId()
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Userul cu id-ul " + aParentFromAnotherOrganization.getId()
                         + " este invalid pentru organizatia " + userWhoWantsToDoTheUpdate.getOrganization().getId()));
 
 
@@ -341,7 +353,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUser() {
+     void deleteUser() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteUser(allowedUser);
@@ -352,8 +364,8 @@ public class UserControllerIntegrationTest {
     }
 
     private void deleteUser(UserEntity allowedUser) throws Exception {
-        UserEntity aParent = testUtils.saveAParentInOrganization(allowedUser.getOrganization());
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        UserEntity aParent = userUtils.saveAParentInOrganization(allowedUser.getOrganization());
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/user/" + aParent.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -363,7 +375,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUserTestShouldFailForNotAllowedUser() {
+     void deleteUserTestShouldFailForNotAllowedUser() {
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteUserWhenCalledByUserShouldFailForNotAllowedUser(notAllowedUser);
@@ -374,8 +386,8 @@ public class UserControllerIntegrationTest {
     }
 
     private void deleteUserWhenCalledByUserShouldFailForNotAllowedUser(UserEntity allowedUser) throws Exception {
-        UserEntity aParent = testUtils.saveAParentInOrganization(allowedUser.getOrganization());
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        UserEntity aParent = userUtils.saveAParentInOrganization(allowedUser.getOrganization());
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/user/" + aParent.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -383,7 +395,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void deleteUserFromAnotherOrganizationShouldFail() {
+     void deleteUserFromAnotherOrganizationShouldFail() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteUserFromAnotherOrganizationWhenCalledByUserShouldFail(allowedUser);
@@ -394,14 +406,14 @@ public class UserControllerIntegrationTest {
     }
 
     private void deleteUserFromAnotherOrganizationWhenCalledByUserShouldFail(UserEntity allowedUser) throws Exception {
-        UserEntity aParentFromAnotherOrganization = testUtils.saveAParentInAnotherOrganization();
-        String token = testUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
+        UserEntity aParentFromAnotherOrganization = userUtils.saveAParentInAnotherOrganization();
+        String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
         mockMvc.perform(MockMvcRequestBuilders.delete("/user/" + aParentFromAnotherOrganization.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Ups! A aparut o eroare!"))
-                .andExpect(jsonPath("$.error").value("Id-ul " + aParentFromAnotherOrganization.getId() + " al user-ului este invalid"));
+                .andExpect(jsonPath("$.error").value("Ups! A aparut o eroare!"))
+                .andExpect(jsonPath("$.message").value("Id-ul " + aParentFromAnotherOrganization.getId() + " al user-ului este invalid"));
 
         assertTrue(userRepository.existsById(aParentFromAnotherOrganization.getId()));
     }

@@ -1,11 +1,8 @@
 package com.edusphere.utils;
 
 import com.edusphere.entities.ChildEntity;
-import com.edusphere.entities.UserEntity;
 import com.edusphere.exceptions.ChildNotFoundException;
-import com.edusphere.exceptions.UserNotFoundException;
 import com.edusphere.repositories.ChildRepository;
-import com.edusphere.vos.ClassVO;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

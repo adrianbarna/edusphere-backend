@@ -42,7 +42,7 @@ public class UserService {
     public List<UserResponseVO> getAllUsersByOrganizationWithoutPasswordField(Integer organizationId) {
         return userRepository.findByOrganizationId(organizationId).stream()
                 .map(userMapper::toVOWithoutPassword)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
@@ -78,7 +78,7 @@ public class UserService {
         userEntity.setSurname(userRequestVO.getSurname());
         userEntity.setName(userRequestVO.getName());
         userEntity.setPassword(passwordEncoder.encode(userRequestVO.getPassword()));
-        userEntity.setActivated(userRequestVO.getIsActivated());
+        userEntity.setIsActivated(userRequestVO.getIsActivated());
         if (userRequestVO.getClassEntityId() != null) {
             userEntity.setClassEntity(classUtil.getClassOrThrowException(userRequestVO.getClassEntityId(),
                     organizationId));

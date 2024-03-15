@@ -2,21 +2,22 @@ package com.edusphere.services;
 
 import com.edusphere.entities.RoleEntity;
 import com.edusphere.entities.UserEntity;
-import com.edusphere.exceptions.RoleAlreadyExistsException;
 import com.edusphere.exceptions.RoleNotFoundException;
 import com.edusphere.mappers.RoleMapper;
 import com.edusphere.mappers.UserMapper;
 import com.edusphere.repositories.RoleRepository;
 import com.edusphere.utils.RoleUtil;
 import com.edusphere.utils.UserUtil;
-import com.edusphere.vos.*;
+import com.edusphere.vos.AssignRoleRequestWrapperVO;
+import com.edusphere.vos.CreateUpdateRoleVO;
+import com.edusphere.vos.RoleVO;
+import com.edusphere.vos.UserResponseVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
@@ -39,7 +40,7 @@ public class RoleService {
     public List<RoleVO> getAllRoles(Integer organizationId) {
         return roleRepository.findByOrganizationId(organizationId).stream()
                 .map(roleMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public RoleVO getRoleById(Integer roleId, Integer organizationId) {

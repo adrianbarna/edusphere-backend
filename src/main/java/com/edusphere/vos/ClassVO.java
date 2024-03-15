@@ -15,6 +15,5 @@ public class ClassVO {
 
     private Integer id;
     private String name;
-    private Integer organizationId;
     private List<Integer> teacherIds;
 }

@@ -4,8 +4,7 @@ public enum RolesEnum {
     OWNER("OWNER"),
     ADMIN("ADMIN"),
     TEACHER("TEACHER"),
-    PARENT("PARENT"),;
-
+    PARENT("PARENT");
     private final String name;
 
     RolesEnum(String name) {

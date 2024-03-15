@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrganizationService {
@@ -32,7 +31,7 @@ public class OrganizationService {
     public List<OrganizationVO> getAllOrganizations() {
         return organizationRepository.findAll().stream()
                 .map(organizationMapper::toVO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public OrganizationVO getOrganizationById(Integer id) {

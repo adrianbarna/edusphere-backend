@@ -12,7 +12,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Integer> {
     List<ClassEntity> findByOrganizationId(Integer organizationId);
     Optional<ClassEntity> findByIdAndOrganizationId(Integer classId, Integer organizationId);
 
-    Boolean existsByIdAndOrganizationId(Integer classId, Integer organizationId);
+    boolean existsByIdAndOrganizationId(Integer classId, Integer organizationId);
     void deleteByIdAndOrganizationId(Integer classId, Integer organizationId);
 }
 

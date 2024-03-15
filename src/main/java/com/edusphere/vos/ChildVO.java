@@ -15,4 +15,6 @@ public class ChildVO {
     private String surname;
     private Integer parentId;
     private Integer classId;
+    private Integer baseTax;
+    private Integer mealPrice;
 }

@@ -69,6 +69,6 @@ public class IncidentController {
             @Parameter(description = "ID of the incident to delete") @PathVariable("id") Integer id) {
         Integer organizationId = authenticatedUserUtil.getCurrentUserOrganizationId();
         incidentService.deleteIncident(id, organizationId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

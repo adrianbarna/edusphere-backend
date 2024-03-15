@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
 public class OrganizationVO {
-    public int id;
-    public String name;
-    public String description;
+    private int id;
+    private String name;
+    private String description;
 }
