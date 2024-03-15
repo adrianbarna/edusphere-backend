@@ -166,7 +166,7 @@ public class PaymentService {
         List<SkippedDaysEntity> unproccessedSkippedDays = skippedDaysRepository.findUnproccessedByChildId(childId);
         int skippedDays = getTheNumberOfSkippedDays(unproccessedSkippedDays);
         int totalWeekdaysForCurrentMonth = getTotalWeekdaysForCurrentMonth();
-        int daysOff= getDaysNotCharged(organizationId);
+        int daysOff = getDaysNotCharged(organizationId);
         int daysChildCheckedIn = totalWeekdaysForCurrentMonth - skippedDays - daysOff;
 
         paymentAmount += daysChildCheckedIn * childEntity.getMealPrice();
@@ -181,27 +181,27 @@ public class PaymentService {
     }
 
     private int getDaysNotCharged(Integer organizationId) {
-            List<DaysNotChargedEntity> daysOffEntities = daysOffRepository.findByOrganizationId(organizationId);
+        List<DaysNotChargedEntity> daysOffEntities = daysOffRepository.findByOrganizationId(organizationId);
 
-            Calendar cal = Calendar.getInstance();
-            int currentMonth = cal.get(Calendar.MONTH);
-            int currentYear = cal.get(Calendar.YEAR);
+        Calendar cal = Calendar.getInstance();
+        int currentMonth = cal.get(Calendar.MONTH);
+        int currentYear = cal.get(Calendar.YEAR);
 
-            long count = daysOffEntities.stream()
-                    .filter(daysOff -> {
-                        cal.setTime(daysOff.getDate());
-                        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-                        int month = cal.get(Calendar.MONTH);
-                        int year = cal.get(Calendar.YEAR);
+        long count = daysOffEntities.stream()
+                .filter(daysOff -> {
+                    cal.setTime(daysOff.getDate());
+                    int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+                    int month = cal.get(Calendar.MONTH);
+                    int year = cal.get(Calendar.YEAR);
 
-                        // Check if the day is in the current month and year, and not on a weekend
-                        return month == currentMonth && year == currentYear &&
-                                (dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY);
-                    })
-                    .count();
+                    // Check if the day is in the current month and year, and not on a weekend
+                    return month == currentMonth && year == currentYear &&
+                            (dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY);
+                })
+                .count();
 
-            return (int) count;
-        }
+        return (int) count;
+    }
 
     private static void markSkippedDaysAsProcessed(List<SkippedDaysEntity> unproccessedSkippedDays) {
         unproccessedSkippedDays
@@ -237,12 +237,14 @@ public class PaymentService {
         Optional<PaymentEntity> lastPaymentByChildIdAndOrganizationId = paymentRepository.findLastPaymentByChildIdAndOrganizationId(childId, organizationId);
         int paymentAmount = 0;
 
-        if (lastPaymentByChildIdAndOrganizationId.isPresent()) {
-            if (lastPaymentByChildIdAndOrganizationId.get().getAmount() < 0) {
-                paymentAmount = lastPaymentByChildIdAndOrganizationId.get().getAmount();
-            }
+        if (lastPaymentAmountIsNegative(lastPaymentByChildIdAndOrganizationId)) {
+            paymentAmount = lastPaymentByChildIdAndOrganizationId.get().getAmount();
         }
         return paymentAmount;
+    }
+
+    private static boolean lastPaymentAmountIsNegative(Optional<PaymentEntity> lastPaymentByChildIdAndOrganizationId) {
+        return lastPaymentByChildIdAndOrganizationId.isPresent() && lastPaymentByChildIdAndOrganizationId.get().getAmount() < 0;
     }
 
     private void throwExceptionIfPaymentIsAlreadyGenerated() {

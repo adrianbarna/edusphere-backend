@@ -26,7 +26,7 @@ public class DaysNotChargedEntity {
     private OrganizationEntity organization;
 
     @NotNull
-    @Column(name = "day", nullable = false)
+    @Column(name = "day_date", nullable = false)
     private Date date;
 
 }
