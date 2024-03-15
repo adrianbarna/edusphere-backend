@@ -435,7 +435,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .andExpect(jsonPath("$.message").value("Nu aveti suficiente drepturi pentru aceasta operatiune!"))
                 .andExpect(jsonPath("$.error").value("Access Denied"));
 
-        assertThat(incidentRepository.findById(incidentEntity.getId()).isEmpty()).isFalse();
+        assertThat(incidentRepository.findById(incidentEntity.getId())).isPresent();
     }
 
     @Test
@@ -465,6 +465,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 // Assert true if it does not exist
-        assertThat(incidentRepository.findById(incidentEntity.getId()).isEmpty()).isFalse();
+        assertThat(incidentRepository.findById(incidentEntity.getId())).isPresent();
     }
 }
