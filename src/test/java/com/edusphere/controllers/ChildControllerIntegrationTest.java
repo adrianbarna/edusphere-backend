@@ -7,7 +7,6 @@ import com.edusphere.repositories.ChildRepository;
 import com.edusphere.vos.ChildVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
  class ChildControllerIntegrationTest {
 
-     static final String PASSWORD = "123456";
+    static final String PASSWORD = "123456";
     @Autowired
     private MockMvc mockMvc;
 
@@ -62,25 +61,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     @Autowired
     private UserTestUtils userUtils;
     
-    private final List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
-    private final List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+    @Test
+     void getAllChildren() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
 
-    @BeforeAll
-     void setup() {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
         RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
         RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
-        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
         allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
         allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
         allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
-        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
-    }
 
-
-    @Test
-     void getAllChildren() {
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getAllChildren(allowedUser);
@@ -108,6 +100,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getAllChildren_shouldFailForNotAllowedUsers() {
+        List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getAllChildren_shouldFailForNotAllowedUsers(notAllowedUser);
@@ -131,6 +129,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildById() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildById(allowedUser);
@@ -154,6 +162,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildById_shouldFailWhenTakenFromAnotherOrganization() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildById_shouldFailWhenTakenFromAnotherOrganization(allowedUser);
@@ -178,6 +196,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildById_shouldFailForNotAllowedUser() {
+        List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getChildById_shouldFailForNotAllowedUser(notAllowedUser);
@@ -200,6 +224,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildByParentId() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildByParentId(allowedUser);
@@ -223,6 +257,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildByParentId_shouldFailWhenTakenFromAnotherOrganization() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildByParentId_shouldFailWhenTakenFromAnotherOrganization(allowedUser);
@@ -247,6 +291,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildByParentId_shouldFailForNotAllowedUser() {
+        List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 getChildByParentId_shouldFailForNotAllowedUser(notAllowedUser);
@@ -269,6 +319,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildForParent() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildForParent(allowedUser);
@@ -292,6 +352,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void getChildForParen_shouldFailWhenRetrievingWrongChild() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 getChildForParen_shouldFailWhenRetrievingWrongChild(allowedUser);
@@ -313,6 +383,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void addChild() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -357,6 +435,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void addChildInAClassFromAnotherOrganization_shouldFail() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -393,6 +479,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void addChildWithParentFromAnotherOrganization_shouldFail() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
         try {
             // Test adding an organization when called by different users.
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
@@ -428,6 +522,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void updateChild() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -472,6 +576,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void updateChild_shouldFailWhenParentInAnotherOrganization() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -515,6 +629,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void updateChild_shouldFailWhenClassInAnotherOrganization() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        RoleEntity teacherRole = roleUtils.saveRole(TEACHER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, teacherRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
 
@@ -558,6 +682,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void updateChild_shouldFailForNotAllowedUsers() {
+        List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
 
@@ -601,6 +731,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void deleteChild() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteChild(allowedUser);
@@ -623,6 +761,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void deleteChild_shouldFailWhenChildInAnotherOrganization() {
+        List<UserEntity> allowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity adminRole = roleUtils.saveRole(ADMIN.getName(), organizationEntity);
+        RoleEntity ownerRole = roleUtils.saveRole(OWNER.getName(), organizationEntity);
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, adminRole));
+        allowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, ownerRole));
+
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 deleteChild_shouldFailWhenChildInAnotherOrganization(allowedUser);
@@ -645,6 +791,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
      void deleteChild_shouldFailForNotAllowedUsers() {
+        List<UserEntity> notAllowedUsersToCallTheEndpoint = new ArrayList<>();
+
+        OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
+        RoleEntity parentRole = roleUtils.saveRole(PARENT.getName(), organizationEntity);
+        notAllowedUsersToCallTheEndpoint.add(userUtils.saveUser(generateRandomString(), PASSWORD, organizationEntity, parentRole));
+
         try {
             for (UserEntity notAllowedUser : notAllowedUsersToCallTheEndpoint) {
                 deleteChild_shouldFailForNotAllowedUsers(notAllowedUser);
