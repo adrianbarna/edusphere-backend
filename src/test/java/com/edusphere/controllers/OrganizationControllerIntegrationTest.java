@@ -40,7 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
  class OrganizationControllerIntegrationTest {
 
-     static final String PASSWORD = "123456";
+    static final String PASSWORD = "123456";
+    public static final String ORGANIZATIONS_ENDPOINT = "/organizations";
     @Autowired
     private MockMvc mockMvc;
 
@@ -96,7 +97,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/organization")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(ORGANIZATIONS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(organizationVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -135,7 +136,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.post("/organization")
+        mockMvc.perform(MockMvcRequestBuilders.post(ORGANIZATIONS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(organizationVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -163,7 +164,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getAllOrganizationsWhenCalledByUser(UserEntity allowedUser) throws Exception {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/organization")
+        mockMvc.perform(MockMvcRequestBuilders.get(ORGANIZATIONS_ENDPOINT)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -192,7 +193,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     private void getAllOrganizationsWhenCalledByUserShouldFailForNotAllowedUser(UserEntity allowedUser) throws Exception {
         String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/organization")
+        mockMvc.perform(MockMvcRequestBuilders.get(ORGANIZATIONS_ENDPOINT)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
@@ -212,7 +213,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getOrganizationByIdWhenCalledByUser(UserEntity allowedUser) throws Exception {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", organizationEntity.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -236,7 +237,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getOrganizationByIdWhenCalledByUserShoudFailForNotAllowedUser(UserEntity allowedUser) throws Exception {
         OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
         String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", organizationEntity.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
@@ -246,7 +247,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         try {
             for (UserEntity allowedUser : allowedUsersToCallTheEndpoint) {
                 String token = tokenUtils.getTokenForUser(allowedUser.getUsername(), PASSWORD);
-                mockMvc.perform(MockMvcRequestBuilders.get("/organization/{id}", -1)
+                mockMvc.perform(MockMvcRequestBuilders.get(ORGANIZATIONS_ENDPOINT + "/{id}", -1)
                                 .header("Authorization", "Bearer " + token))
                         .andExpect(MockMvcResultMatchers.status().isBadRequest());
             }
@@ -267,7 +268,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                     .description("Updated Description")
                     .build();
 
-            mockMvc.perform(MockMvcRequestBuilders.put("/organization/{id}", organizationEntity.getId())
+            mockMvc.perform(MockMvcRequestBuilders.put(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token)
                             .content(asJsonString(updatedOrganizationVO))
                             .contentType(MediaType.APPLICATION_JSON))
@@ -295,7 +296,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                     .description("Updated Description")
                     .build();
 
-            mockMvc.perform(MockMvcRequestBuilders.put("/organization/{id}", organizationEntity.getId())
+            mockMvc.perform(MockMvcRequestBuilders.put(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token)
                             .content(asJsonString(updatedOrganizationVO))
                             .contentType(MediaType.APPLICATION_JSON))
@@ -312,7 +313,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
             String token = tokenUtils.getTokenForUser(allowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/organization/{id}", organizationEntity.getId())
+            mockMvc.perform(MockMvcRequestBuilders.delete(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token))
                     .andExpect(MockMvcResultMatchers.status().isOk());
 
@@ -330,7 +331,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             OrganizationEntity organizationEntity = organizationUtils.saveOrganization();
             String token = tokenUtils.getTokenForUser(notAllowedUsersToCallTheEndpoint.get(0).getUsername(), PASSWORD);
 
-            mockMvc.perform(MockMvcRequestBuilders.delete("/organization/{id}", organizationEntity.getId())
+            mockMvc.perform(MockMvcRequestBuilders.delete(ORGANIZATIONS_ENDPOINT + "/{id}", organizationEntity.getId())
                             .header("Authorization", "Bearer " + token))
                     .andExpect(MockMvcResultMatchers.status().isForbidden());
         } catch (Exception e) {

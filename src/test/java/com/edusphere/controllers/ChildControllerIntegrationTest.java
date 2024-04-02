@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  class ChildControllerIntegrationTest {
 
     static final String PASSWORD = "123456";
+    public static final String CHILDREN_ENDPOINT = "/children";
     @Autowired
     private MockMvc mockMvc;
 
@@ -89,7 +90,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         ChildEntity childFromAnotherOrganization = childUtils.saveAChildInAnotherOrganization();
 
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/child")
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -118,7 +119,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getAllChildren_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/child")
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -151,7 +152,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getChildById(UserEntity userEntity) throws Exception {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -185,7 +186,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         OrganizationEntity anotherOrganizationEntity = organizationUtils.saveOrganization();
         ChildEntity childEntity = childUtils.saveAChildInOrganization(anotherOrganizationEntity);
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error")
@@ -214,7 +215,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getChildById_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/{id}", childEntity.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/{id}", childEntity.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
                 .andExpect(jsonPath("$.message")
@@ -246,7 +247,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getChildByParentId(UserEntity userEntity) throws Exception {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -280,7 +281,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         OrganizationEntity anotherOrganizationEntity = organizationUtils.saveOrganization();
         ChildEntity childEntity = childUtils.saveAChildInOrganization(anotherOrganizationEntity);
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error")
@@ -309,7 +310,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getChildByParentId_shouldFailForNotAllowedUser(UserEntity userEntity) throws Exception {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/parent/{parentId}", childEntity.getParent().getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/parent/{parentId}", childEntity.getParent().getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
                 .andExpect(jsonPath("$.message")
@@ -341,7 +342,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void getChildForParent(UserEntity userEntity) throws Exception {
         ChildEntity childEntity = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(childEntity.getParent().getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/forParent")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -373,7 +374,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     private void getChildForParen_shouldFailWhenRetrievingWrongChild(UserEntity userEntity) throws Exception {
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.get("/child/forParent")
+        mockMvc.perform(MockMvcRequestBuilders.get(CHILDREN_ENDPOINT + "/forParent")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.error")
@@ -414,7 +415,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/child")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(CHILDREN_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -466,7 +467,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.post("/child")
+        mockMvc.perform(MockMvcRequestBuilders.post(CHILDREN_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -509,7 +510,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.post("/child")
+        mockMvc.perform(MockMvcRequestBuilders.post(CHILDREN_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -555,7 +556,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .classId(aClass.getId())
                 .build();
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CHILDREN_ENDPOINT + "/" + childToBeUpdated.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -609,7 +610,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .classId(aClass.getId())
                 .build();
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CHILDREN_ENDPOINT + "/" + childToBeUpdated.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -662,7 +663,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .classId(aClass.getId())
                 .build();
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CHILDREN_ENDPOINT + "/" + childToBeUpdated.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -711,7 +712,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .classId(aClass.getId())
                 .build();
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/child/" + childToBeUpdated.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CHILDREN_ENDPOINT + "/" + childToBeUpdated.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(childVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -751,7 +752,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void deleteChild(UserEntity userEntity) throws Exception {
         ChildEntity aChild = childUtils.saveAChildInOrganization(userEntity.getOrganization());
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CHILDREN_ENDPOINT + "/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -781,7 +782,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void deleteChild_shouldFailWhenChildInAnotherOrganization(UserEntity userEntity) throws Exception {
         ChildEntity aChild = childUtils.saveAChildInAnotherOrganization();
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CHILDREN_ENDPOINT + "/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -809,7 +810,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private void deleteChild_shouldFailForNotAllowedUsers(UserEntity userEntity) throws Exception {
         ChildEntity aChild = childUtils.saveAChildInAnotherOrganization();
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/child/" + aChild.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CHILDREN_ENDPOINT + "/" + aChild.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());

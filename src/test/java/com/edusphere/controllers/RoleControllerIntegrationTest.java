@@ -41,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
  class RoleControllerIntegrationTest {
 
+    public static final String ROLES_ENDPOINT = "/roles";
     @Autowired
     private MockMvc mockMvc;
 
@@ -96,7 +97,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         List<RoleEntity> organizationRoles = roleRepository.findByOrganizationId(userEntity.getOrganization().getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role")
+        mockMvc.perform(MockMvcRequestBuilders.get(ROLES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -120,7 +121,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role")
+        mockMvc.perform(MockMvcRequestBuilders.get(ROLES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -144,7 +145,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(ROLES_ENDPOINT + "/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -168,7 +169,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + aRole.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(ROLES_ENDPOINT + "/" + aRole.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -193,7 +194,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/role/" + roleFromAnotherOrganization.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get(ROLES_ENDPOINT + "/" + roleFromAnotherOrganization.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -217,7 +218,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(roleVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -245,7 +246,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(roleVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -276,7 +277,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/" + role.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(roleVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -308,7 +309,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         CreateUpdateRoleVO roleVO = new CreateUpdateRoleVO();
         roleVO.setName(generateRandomString());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/" + role.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(roleVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -340,7 +341,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(ROLES_ENDPOINT + "/" + role.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -367,7 +368,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(ROLES_ENDPOINT + "/" + role.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -396,7 +397,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), "123456");
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/role/" + role.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(ROLES_ENDPOINT + "/" + role.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -431,7 +432,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/assign")
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/assign")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -467,7 +468,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/assign")
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/assign")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -505,7 +506,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToAssignANewRole.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/assign")
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/assign")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -543,7 +544,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userFromAnotherOrganization.getId());
         assignRoleRequestWrapperVO.getRoleIds().add(role.getId());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/role/assign")
+        mockMvc.perform(MockMvcRequestBuilders.put(ROLES_ENDPOINT + "/assign")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -581,7 +582,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(role.getId())); // Change roles to only "ADMIN"
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role/changeRoles")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT + "/changeRoles")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -618,7 +619,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role/changeRoles")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT + "/changeRoles")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -657,7 +658,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userToChangeTheRole.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role/changeRoles")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT + "/changeRoles")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -697,7 +698,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assignRoleRequestWrapperVO.setUserId(userFromAnotherOrganization.getId());
         assignRoleRequestWrapperVO.setRoleIds(List.of(roleFromAnotherOrganization.getId())); // Change roles to only "ADMIN"
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/role/changeRoles")
+        mockMvc.perform(MockMvcRequestBuilders.post(ROLES_ENDPOINT + "/changeRoles")
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(assignRoleRequestWrapperVO))
                         .contentType(MediaType.APPLICATION_JSON))

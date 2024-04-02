@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
  class PaymentControllerIntegrationTest {
      static final String PASSWORD = "123456";
-     static final String PAYMENT_ENDPOINT = "/payment";
+     static final String PAYMENT_ENDPOINT = "/payments";
     @Autowired
     private MockMvc mockMvc;
 

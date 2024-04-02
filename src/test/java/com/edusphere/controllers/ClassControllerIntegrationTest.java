@@ -40,7 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.config.location=classpath:/application-test.properties")
  class ClassControllerIntegrationTest {
      static final String PASSWORD = "123456";
-     static final String CLASS_ENDPOINT = "/class";
+    public static final String CLASSES_ENDPOINT = "/classes";
+    static final String CLASS_ENDPOINT = CLASSES_ENDPOINT;
     @Autowired
     private MockMvc mockMvc;
 
@@ -258,7 +259,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/class")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(CLASSES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -303,7 +304,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.post("/class")
+        mockMvc.perform(MockMvcRequestBuilders.post(CLASSES_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -350,7 +351,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/class/" + classVO.getId())
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put(CLASSES_ENDPOINT + "/" + classVO.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -406,7 +407,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put("/class/" + classVO.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CLASSES_ENDPOINT + "/" + classVO.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -449,7 +450,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .build();
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.put("/class/" + classVO.getId())
+        mockMvc.perform(MockMvcRequestBuilders.put(CLASSES_ENDPOINT + "/" + classVO.getId())
                         .header("Authorization", "Bearer " + token)
                         .content(asJsonString(classVO))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -482,7 +483,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CLASSES_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -516,7 +517,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CLASSES_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isForbidden())
@@ -553,7 +554,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         String token = tokenUtils.getTokenForUser(userEntity.getUsername(), PASSWORD);
 
         // Perform the mockMvc request
-        mockMvc.perform(MockMvcRequestBuilders.delete("/class/" + aClass.getId())
+        mockMvc.perform(MockMvcRequestBuilders.delete(CLASSES_ENDPOINT + "/" + aClass.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())

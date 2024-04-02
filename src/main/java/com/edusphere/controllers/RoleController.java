@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/role")
+@RequestMapping("/roles")
 @Tag(name = "Role Controller", description = "APIs for managing roles")
 @SecurityRequirement(name = "Bearer Authentication")
 @OwnerOrAdminPermission

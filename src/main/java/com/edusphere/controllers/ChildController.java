@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/child")
+@RequestMapping("/children")
 @Tag(name = "Child Controller", description = "APIs for managing children")
 @SecurityRequirement(name = "Bearer Authentication")
-//TODO add endpoint as plural
 public class ChildController {
 
     private final ChildService childService;

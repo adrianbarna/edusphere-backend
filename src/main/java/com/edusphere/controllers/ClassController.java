@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/class")
+@RequestMapping("/classes")
 @Tag(name = "Class Controller", description = "APIs for managing classes")
 @SecurityRequirement(name = "Bearer Authentication")
 

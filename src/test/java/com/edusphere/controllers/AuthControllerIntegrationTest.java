@@ -30,6 +30,7 @@ import static com.edusphere.enums.RolesEnum.OWNER;
 public class AuthControllerIntegrationTest {
 
     public static final String PASSWORD = "123456";
+    public static final String USERS_ENDPOINT = "/users";
     @Autowired
     private MockMvc mockMvc;
 
@@ -61,7 +62,7 @@ public class AuthControllerIntegrationTest {
         String token = result.getResponse().getContentAsString();
 
         //do another call to verify that the token is valid
-        mockMvc.perform(MockMvcRequestBuilders.get("/user")
+        mockMvc.perform(MockMvcRequestBuilders.get(USERS_ENDPOINT)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())

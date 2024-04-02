@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 @Tag(name = "User Controller", description = "APIs for managing users")
 @SecurityRequirement(name = "Bearer Authentication")
 @OwnerOrAdminPermission

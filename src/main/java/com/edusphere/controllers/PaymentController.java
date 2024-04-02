@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/payments")
 @Tag(name = "User Controller", description = "APIs for managing users")
 @SecurityRequirement(name = "Bearer Authentication")
 @OwnerOrAdminPermission
